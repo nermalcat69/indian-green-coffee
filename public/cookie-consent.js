@@ -176,7 +176,7 @@
                 <span class="mcc-badge">Always active</span>
               </div>
               <p class="mcc-category-text">
-                Stores your theme and consent preferences so the site remembers them on this device.
+                Stores your consent preferences so the site remembers them on this device.
               </p>
             </div>
 
