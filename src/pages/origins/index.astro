@@ -1,0 +1,145 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { origins } from '../../data/origins';
+import { siteConfig } from '../../config/site';
+
+const title = 'Indian Coffee Origins | Koraput, Halflong, Chikmagalur & More';
+const description =
+	"A guide to India's green coffee growing regions — Koraput (Odisha), Halflong (Assam), the Chirang–Tirap Robusta belt, and Chikmagalur–Bababudangiri (Karnataka).";
+
+const breadcrumbSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{ '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.siteUrl },
+		{ '@type': 'ListItem', position: 2, name: 'Origins', item: `${siteConfig.siteUrl}/origins` },
+	],
+};
+---
+
+<Layout title={title} description={description} schema={[breadcrumbSchema]}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<section class="hero">
+				<p class="eyebrow">Origins</p>
+				<h1 class="display-title">Where Indian green coffee is grown</h1>
+				<p class="hero-text">
+					Four growing regions, each with a distinct climate, varietal mix, and processing
+					tradition — from tribal-farmed Odisha naturals to century-old Karnataka estates.
+				</p>
+			</section>
+
+			<section class="origins-grid" aria-label="Coffee growing origins">
+				{
+					origins.map((origin) => (
+						<a class="origin-link" href={`/origins/${origin.slug}`}>
+							<article class={`accent-card ${origin.accent}`}>
+								<p class="origin-region">{origin.state} — {origin.region}</p>
+								<h2 class="origin-title">{origin.name}</h2>
+								<p class="origin-summary">{origin.summary}</p>
+								<p class="origin-meta">{origin.elevation} · {origin.varieties}</p>
+							</article>
+						</a>
+					))
+				}
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 78rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.hero {
+		padding: 6rem 0 3.5rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.hero-text {
+		max-width: 42rem;
+		margin: 1.25rem 0 0;
+		font-size: 1.1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.origins-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.75rem;
+		padding-bottom: 4rem;
+	}
+
+	.origin-link {
+		display: block;
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.origin-region {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		opacity: 0.72;
+	}
+
+	.origin-title {
+		margin: 0.6rem 0 0;
+		font-size: clamp(1.4rem, 1.8vw, 1.7rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.origin-summary {
+		margin: 0.85rem 0 0;
+		font-size: 1rem;
+		line-height: 1.55;
+	}
+
+	.origin-meta {
+		margin: 1rem 0 0;
+		font-size: 0.88rem;
+		font-weight: 600;
+		opacity: 0.72;
+	}
+
+	@media (max-width: 900px) {
+		.origins-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			width: min(calc(100% - 1.5rem), 78rem);
+			padding-top: 1rem;
+		}
+
+		.hero {
+			padding: 4rem 0 2.5rem;
+		}
+	}
+</style>

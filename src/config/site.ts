@@ -20,36 +20,38 @@ export type SiteConfig = {
 	socialLinks: SiteLink[];
 };
 
-const defaultSiteUrl = 'https://maria-lake.vercel.app';
+const defaultSiteUrl = 'https://indiangreencoffee.com';
 const envSiteUrl = process.env.SITE_URL ?? process.env.PUBLIC_SITE_URL;
 const normalizedSiteUrl = (envSiteUrl || defaultSiteUrl).replace(/\/+$/, '');
 
 export const siteConfig: SiteConfig = {
-	name: 'Maria',
-	title: 'Maria | Astro Theme for UI/UX Designer Portfolios',
+	name: 'Indian Green Coffee',
+	title: 'Indian Green Coffee | Origins, Grades & Wholesale Sourcing Guide',
 	description:
-		'A clean Astro theme for UI/UX designer portfolios, case studies, and modern product design presentations.',
+		"An origin guide to India's green coffee — Koraput, Halflong, Chikmagalur, and Bababudangiri estates, processing methods, grading, and how to source it wholesale.",
 	// Set SITE_URL or PUBLIC_SITE_URL to keep canonicals, robots.txt, and the sitemap aligned in each environment.
 	siteUrl: normalizedSiteUrl,
-	email: 'hello@maria.com',
-	locale: 'en-US',
-	authorName: 'Maria',
-	authorRole: 'UX Designer',
+	email: 'office@graycup.org',
+	locale: 'en-IN',
+	authorName: 'Gray Cup Enterprises Private Limited',
+	authorRole: 'Green Coffee Exporter',
 	keywords: [
-		'Astro UI UX portfolio theme',
-		'UI UX designer portfolio template',
-		'Astro portfolio template',
-		'product designer portfolio theme',
-		'case study portfolio theme',
+		'Indian green coffee',
+		'Indian coffee origins',
+		'Koraput coffee',
+		'Halflong Assam coffee',
+		'Chikmagalur arabica',
+		'wholesale green coffee India',
+		'green coffee exporter India',
 	],
 	ogImage: '/og-image.svg',
 	navLinks: [
-		{ href: '/work', label: 'Work' },
+		{ href: '/origins', label: 'Origins' },
+		{ href: '/products', label: 'Coffees' },
 		{ href: '/about', label: 'About' },
-		{ href: '/resume', label: 'Resume' },
 	],
 	extraPages: [
-		{ href: '/work/nextpoint', label: 'Case Study' },
+		{ href: '/wholesale', label: 'Wholesale Sourcing' },
 		{ href: '/cookies', label: 'Cookies' },
 		{ href: '/privacy', label: 'Privacy' },
 		{ href: '/terms', label: 'Terms' },
@@ -61,7 +63,8 @@ export const siteConfig: SiteConfig = {
 		{ href: '/terms', label: 'Terms' },
 	],
 	socialLinks: [
-		{ href: 'https://www.linkedin.com/', label: 'LinkedIn' },
-		{ href: 'https://dribbble.com/', label: 'Dribbble' },
+		{ href: 'https://x.com/TheGrayCup', label: 'X' },
+		{ href: 'https://www.linkedin.com/company/gray-cup/', label: 'LinkedIn' },
+		{ href: 'https://instagram.com/thegraycup', label: 'Instagram' },
 	],
 };

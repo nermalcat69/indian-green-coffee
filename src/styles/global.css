@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+.accent-card {
+	border-radius: 1.35rem;
+	padding: 1.75rem;
+	transition:
+		transform 140ms ease,
+		box-shadow 140ms ease;
+}
+
+a:has(> .accent-card):hover .accent-card,
+a:has(> .accent-card):focus-visible .accent-card {
+	transform: translateY(-4px);
+	box-shadow: var(--shadow-soft);
+}
+
+.accent-card.lime {
+	background: #dbff63;
+	color: #171717;
+}
+
+.accent-card.cyan {
+	background: #91e6ee;
+	color: #171717;
+}
+
+.accent-card.lavender {
+	background: #c5baf9;
+	color: #171717;
+}
+
+.accent-card.mint {
+	background: #78f1cf;
+	color: #171717;
+}

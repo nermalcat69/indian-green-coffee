@@ -1,0 +1,287 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../../layouts/Layout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { origins, getOriginBySlug } from '../../data/origins';
+import { getProductBySlug } from '../../data/products';
+import { siteConfig } from '../../config/site';
+
+export function getStaticPaths() {
+	return origins.map((o) => ({ params: { slug: o.slug } }));
+}
+
+const { slug } = Astro.params;
+// getStaticPaths above only ever generates params for known origins, so this is always defined.
+const origin = getOriginBySlug(slug as string)!;
+
+const relatedProducts = origin.productSlugs
+	.map((s) => getProductBySlug(s))
+	.filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+const title = `${origin.name}, ${origin.state} | Indian Green Coffee Origin Guide`;
+const description = `${origin.summary} Elevation ${origin.elevation}, varieties: ${origin.varieties}.`;
+const pageUrl = `${siteConfig.siteUrl}/origins/${origin.slug}`;
+
+const schema = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.siteUrl },
+			{ '@type': 'ListItem', position: 2, name: 'Origins', item: `${siteConfig.siteUrl}/origins` },
+			{ '@type': 'ListItem', position: 3, name: origin.name, item: pageUrl },
+		],
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'Place',
+		name: `${origin.name}, ${origin.state}`,
+		description: origin.summary,
+		url: pageUrl,
+		containedInPlace: {
+			'@type': 'AdministrativeArea',
+			name: origin.state,
+		},
+	},
+];
+---
+
+<Layout title={title} description={description} schema={schema}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<nav class="breadcrumb" aria-label="Breadcrumb">
+				<a href="/origins">Origins</a>
+				<span aria-hidden="true">/</span>
+				<span aria-current="page">{origin.name}</span>
+			</nav>
+
+			<header class="hero">
+				<p class="eyebrow">{origin.state} &middot; {origin.region}</p>
+				<h1 class="display-title">{origin.name}</h1>
+				<div class="stat-row">
+					<div class="stat">
+						<p class="stat-label">Elevation</p>
+						<p class="stat-value">{origin.elevation}</p>
+					</div>
+					<div class="stat">
+						<p class="stat-label">Varieties</p>
+						<p class="stat-value">{origin.varieties}</p>
+					</div>
+				</div>
+			</header>
+
+			<figure class="hero-image">
+				<Image
+					src={origin.image}
+					alt={origin.imageAlt}
+					loading="eager"
+					decoding="async"
+					widths={[480, 720, 1040]}
+					sizes="(max-width: 900px) 100vw, 60rem"
+				/>
+			</figure>
+
+			<section class="story">
+				{origin.body.map((paragraph) => <p>{paragraph}</p>)}
+			</section>
+
+			{
+				relatedProducts.length > 0 && (
+					<section class="related" aria-labelledby="related-heading">
+						<h2 id="related-heading">Coffees from {origin.name}</h2>
+						<div class="related-grid">
+							{relatedProducts.map((product) => (
+								<a class="product-link" href={`/products/${product.slug}`}>
+									<article class={`accent-card ${product.accent}`}>
+										<h3>{product.name}</h3>
+										<p class="product-summary">{product.summary}</p>
+										<p class="product-meta">
+											{product.process} · SCA {product.scaScore ?? '—'}
+										</p>
+									</article>
+								</a>
+							))}
+						</div>
+					</section>
+				)
+			}
+
+			<section class="cta">
+				<h2>Sourcing {origin.name} coffee?</h2>
+				<p>
+					Request samples, pricing, and MOQs at
+					<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>,
+					or email <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
+				</p>
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 78rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.breadcrumb {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+		margin: 2rem 0 0;
+		font-size: 0.9rem;
+		color: var(--muted-foreground);
+	}
+
+	.breadcrumb a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.breadcrumb a:hover,
+	.breadcrumb a:focus-visible {
+		text-decoration: underline;
+	}
+
+	.hero {
+		padding: 2rem 0 3rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.stat-row {
+		display: flex;
+		gap: 2.5rem;
+		margin-top: 1.75rem;
+	}
+
+	.stat-label {
+		margin: 0;
+		font-size: 0.82rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--muted-foreground);
+	}
+
+	.stat-value {
+		margin: 0.35rem 0 0;
+		font-size: 1.15rem;
+		font-weight: 700;
+	}
+
+	.hero-image {
+		margin: 0;
+		max-width: 46rem;
+	}
+
+	.hero-image :global(img) {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-radius: 1.25rem;
+		box-shadow: var(--shadow-soft);
+	}
+
+	.story {
+		display: grid;
+		gap: 1.25rem;
+		max-width: 46rem;
+		padding: 2.5rem 0;
+		border-top: 1px solid var(--border);
+		font-size: 1.08rem;
+		line-height: 1.7;
+	}
+
+	.related {
+		padding: 2.5rem 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.related h2 {
+		margin: 0 0 1.75rem;
+		font-size: clamp(1.4rem, 2vw, 1.8rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.related-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+		gap: 1.5rem;
+	}
+
+	.product-link {
+		display: block;
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.product-link h3 {
+		margin: 0;
+		font-size: 1.1rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+	}
+
+	.product-summary {
+		margin: 0.65rem 0 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+	}
+
+	.product-meta {
+		margin: 0.9rem 0 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		opacity: 0.72;
+	}
+
+	.cta {
+		padding: 2.5rem 0 1rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.cta h2 {
+		margin: 0;
+		font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.cta p {
+		margin: 0.75rem 0 0;
+		font-size: 1.02rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.cta a {
+		color: var(--accent-link);
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			width: min(calc(100% - 1.5rem), 78rem);
+		}
+
+		.stat-row {
+			gap: 1.5rem;
+		}
+	}
+</style>

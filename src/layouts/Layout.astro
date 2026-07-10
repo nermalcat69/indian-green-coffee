@@ -28,11 +28,13 @@ const schemaData =
 		},
 		{
 			'@context': 'https://schema.org',
-			'@type': 'Person',
+			'@type': 'Organization',
+			'@id': `${siteConfig.siteUrl}/#organization`,
 			name: siteConfig.authorName,
-			jobTitle: siteConfig.authorRole,
+			description: siteConfig.authorRole,
 			url: siteConfig.siteUrl,
 			email: siteConfig.email,
+			sameAs: siteConfig.socialLinks.map((link) => link.href),
 		},
 		{
 			'@context': 'https://schema.org',

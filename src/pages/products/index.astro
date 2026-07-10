@@ -1,0 +1,179 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { products } from '../../data/products';
+import { getOriginBySlug } from '../../data/origins';
+import { siteConfig } from '../../config/site';
+
+const title = 'Indian Green Coffee Catalogue | Arabica & Robusta by Origin';
+const description =
+	'Ten green coffee lots from four Indian origins — Koraput naturals and honey, Halflong SL-9, Chirang and Tirap Robusta, and Chikmagalur–Bababudangiri Arabica.';
+
+const schema = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'CollectionPage',
+		name: title,
+		description,
+		url: `${siteConfig.siteUrl}/products`,
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'ItemList',
+		itemListElement: products.map((product, index) => ({
+			'@type': 'ListItem',
+			position: index + 1,
+			url: `${siteConfig.siteUrl}/products/${product.slug}`,
+			name: product.name,
+		})),
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.siteUrl },
+			{ '@type': 'ListItem', position: 2, name: 'Coffees', item: `${siteConfig.siteUrl}/products` },
+		],
+	},
+];
+---
+
+<Layout title={title} description={description} schema={schema}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<header class="hero">
+				<p class="eyebrow">Coffees</p>
+				<h1 class="display-title">The catalogue, by origin</h1>
+				<p class="hero-text">
+					Ten lots across four regions. Prices shown are indicative FOB India rates in INR per kg —
+					contact <a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
+					for a current quote and shipping terms to your country.
+				</p>
+			</header>
+
+			<section class="products-grid" aria-label="Coffee products">
+				{
+					products.map((product) => {
+						const origin = getOriginBySlug(product.originSlug);
+						return (
+							<a class="product-link" href={`/products/${product.slug}`}>
+								<article class={`accent-card ${product.accent}`}>
+									<p class="product-origin">{origin?.name}, {origin?.state}</p>
+									<h2 class="product-title">{product.name}</h2>
+									<p class="product-summary">{product.summary}</p>
+									<p class="product-meta">
+										{product.process}
+										{product.scaScore ? ` · SCA ${product.scaScore}` : ''}
+									</p>
+									<p class="product-price">
+										₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}
+									</p>
+								</article>
+							</a>
+						);
+					})
+				}
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 78rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.hero {
+		padding: 6rem 0 3.5rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.hero-text {
+		max-width: 44rem;
+		margin: 1.25rem 0 0;
+		font-size: 1.1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.hero-text a {
+		color: var(--accent-link);
+	}
+
+	.products-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+		gap: 1.5rem;
+		padding-bottom: 4rem;
+	}
+
+	.product-link {
+		display: block;
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.product-origin {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		opacity: 0.72;
+	}
+
+	.product-title {
+		margin: 0.55rem 0 0;
+		font-size: 1.25rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.product-summary {
+		margin: 0.75rem 0 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+	}
+
+	.product-meta {
+		margin: 1rem 0 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		opacity: 0.72;
+	}
+
+	.product-price {
+		margin: 0.4rem 0 0;
+		font-size: 0.95rem;
+		font-weight: 700;
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			width: min(calc(100% - 1.5rem), 78rem);
+			padding-top: 1rem;
+		}
+
+		.hero {
+			padding: 4rem 0 2.5rem;
+		}
+	}
+</style>

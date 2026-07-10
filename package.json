@@ -1,22 +1,20 @@
 {
-  "name": "maria-astro-theme",
-  "description": "A clean Astro portfolio theme for UX designers and product designers.",
+  "name": "indian-green-coffee",
+  "description": "An origin guide to India's green coffee, published by Gray Cup Enterprises.",
   "type": "module",
-  "version": "2.0.0",
-  "author": "Andrei Alba",
+  "version": "1.0.0",
+  "author": "Gray Cup Enterprises Private Limited",
   "license": "MIT",
   "keywords": [
-    "astro-theme",
-    "astro",
-    "portfolio",
-    "ux",
-    "designer",
-    "tailwindcss"
+    "indian green coffee",
+    "green coffee origins",
+    "wholesale coffee sourcing",
+    "astro"
   ],
-  "homepage": "https://maria-lake.vercel.app/",
+  "homepage": "https://indiangreencoffee.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/andreialba/maria.git"
+    "url": "https://github.com/Gray-Cup/indian-green-coffee.git"
   },
   "engines": {
     "node": ">=22.12.0"

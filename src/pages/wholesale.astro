@@ -1,0 +1,219 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+
+const title = 'Wholesale Green Coffee Sourcing from India | Indian Green Coffee';
+const description =
+	'How to source Indian green coffee wholesale — export documentation, minimum order quantities, packaging, and where to request samples and pricing.';
+
+const schema = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.siteUrl },
+			{ '@type': 'ListItem', position: 2, name: 'Wholesale Sourcing', item: `${siteConfig.siteUrl}/wholesale` },
+		],
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: [
+			{
+				'@type': 'Question',
+				name: 'What documentation is included with an export shipment of Indian green coffee?',
+				acceptedAnswer: {
+					'@type': 'Answer',
+					text: 'Standard export documentation includes a commercial invoice, packing list, certificate of origin, and phytosanitary certificate where required by the destination country. Fumigation certificates are provided on request for sea freight shipments.',
+				},
+			},
+			{
+				'@type': 'Question',
+				name: 'What is the minimum order quantity for Indian green coffee?',
+				acceptedAnswer: {
+					'@type': 'Answer',
+					text: 'Specialty lots typically start at a 10kg sample order, with commercial-grade lots starting around 60kg (one GrainPro-lined jute bag). Full container loads are available for larger volume requirements.',
+				},
+			},
+			{
+				'@type': 'Question',
+				name: 'How is Indian green coffee packaged for export?',
+				acceptedAnswer: {
+					'@type': 'Answer',
+					text: 'Standard export packaging is 60kg jute bags with a GrainPro or Ecotact liner to control moisture during transit. Vacuum-sealed sample packaging is available for smaller trial orders.',
+				},
+			},
+		],
+	},
+];
+---
+
+<Layout title={title} description={description} schema={schema}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<header class="hero">
+				<p class="eyebrow">Wholesale Sourcing</p>
+				<h1 class="display-title">How wholesale sourcing works</h1>
+				<p class="hero-text">
+					This site is a reference guide to Indian green coffee origins and lots. Ordering,
+					quotes, and country-specific shipping are handled through our sister site,
+					<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>.
+					Here's what to expect from that process.
+				</p>
+			</header>
+
+			<section class="steps">
+				<div class="step">
+					<p class="step-number">01</p>
+					<h2>Request samples</h2>
+					<p>
+						Sample orders start at 10kg for specialty lots. Message us on WhatsApp or use the
+						contact form on bulkgreencoffee.com with the origin, process, and volume you're
+						evaluating.
+					</p>
+				</div>
+				<div class="step">
+					<p class="step-number">02</p>
+					<h2>Confirm grade and pricing</h2>
+					<p>
+						Pricing is quoted FOB India per kg, in INR. Grades, MOQs, and current-season pricing
+						for each lot are listed on the individual <a href="/products">coffee pages</a>.
+					</p>
+				</div>
+				<div class="step">
+					<p class="step-number">03</p>
+					<h2>Export documentation</h2>
+					<p>
+						Every shipment includes a commercial invoice, packing list, and certificate of
+						origin. Phytosanitary and fumigation certificates are arranged where the destination
+						country requires them.
+					</p>
+				</div>
+				<div class="step">
+					<p class="step-number">04</p>
+					<h2>Shipping</h2>
+					<p>
+						Sea freight (FOB Chennai / FOB Mundra) is standard for bulk orders; air freight is
+						available for samples and urgent lots. Transit times and duties vary by destination —
+						see the country pages on bulkgreencoffee.com for specifics.
+					</p>
+				</div>
+			</section>
+
+			<section class="cta">
+				<h2>Ready to request a sample?</h2>
+				<p>
+					Visit <a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
+					or email <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
+				</p>
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 78rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.hero {
+		padding: 6rem 0 3.5rem;
+		max-width: 44rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.hero-text {
+		margin: 1.25rem 0 0;
+		font-size: 1.1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.hero-text a,
+	.cta a,
+	.step p a {
+		color: var(--accent-link);
+	}
+
+	.steps {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 2rem;
+		padding: 2.5rem 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.step-number {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--muted-foreground);
+	}
+
+	.step h2 {
+		margin: 0.5rem 0 0;
+		font-size: 1.3rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.step p {
+		margin: 0.75rem 0 0;
+		font-size: 1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.cta {
+		padding: 2.5rem 0 1rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.cta h2 {
+		margin: 0;
+		font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.cta p {
+		margin: 0.75rem 0 0;
+		font-size: 1.02rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	@media (max-width: 900px) {
+		.steps {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			width: min(calc(100% - 1.5rem), 78rem);
+		}
+
+		.hero {
+			padding: 4rem 0 2.5rem;
+		}
+	}
+</style>

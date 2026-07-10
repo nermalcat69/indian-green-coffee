@@ -1,14 +1,24 @@
 ---
-import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import portraitImage from '../assets/images/maria.webp';
+import { siteConfig } from '../config/site';
+
+const title = 'About Indian Green Coffee | Gray Cup Enterprises';
+const description =
+	'Indian Green Coffee is an origin guide published by Gray Cup Enterprises, exporters of Indian green coffee since 2019.';
+
+const schema = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'AboutPage',
+		name: title,
+		description,
+		url: `${siteConfig.siteUrl}/about`,
+	},
+];
 ---
 
-<Layout
-	title="About Maria | Astro Theme for UI/UX Designer Portfolios"
-	description="About page for the Maria Astro theme, built for UI/UX designer portfolios, product design stories, and case study-driven personal sites."
->
+<Layout title={title} description={description} schema={schema}>
 	<a class="skip-link" href="#main-content">Skip to content</a>
 
 	<div class="page">
@@ -17,79 +27,56 @@ import portraitImage from '../assets/images/maria.webp';
 		<main id="main-content">
 			<section class="hero">
 				<p class="eyebrow">About</p>
-				<div class="hero-layout">
-					<div class="hero-copy">
-						<h1 class="display-title">I design products that make complicated things feel clearer and easier to use.</h1>
-						<p class="hero-text">
-							I'm Maria, a UX designer focused on turning dense workflows, fuzzy product
-							requirements, and overloaded interfaces into experiences people can navigate
-							with confidence.
-						</p>
-					</div>
-					<div class="hero-portrait-wrap">
-						<Image
-							class="hero-portrait"
-							src={portraitImage}
-							alt="Portrait of Maria"
-							loading="eager"
-							decoding="async"
-							widths={[320, 480, 640]}
-							sizes="(max-width: 980px) 100vw, 32vw"
-						/>
-					</div>
-				</div>
+				<h1 class="display-title">A guide, not a storefront</h1>
+				<p class="hero-text">
+					Indian Green Coffee is a reference site about where India's green coffee comes from —
+					published by Gray Cup Enterprises, exporters of Indian green coffee since 2019.
+				</p>
 			</section>
 
 			<section class="editorial-section">
 				<div class="section-rail">
-					<p class="section-kicker">Background</p>
+					<p class="section-kicker">Why this exists</p>
 				</div>
 				<div class="story-block">
 					<p>
-						Over the last 10+ years, I've worked across SaaS, operations, service platforms,
-						and internal tools where the design challenge is rarely just about making something
-						look good. More often, it's about helping people understand what matters, what to
-						do next, and why the product should feel trustworthy in the first place.
-					</p>
-					<p>
-						I sit somewhere between product thinking, systems design, and interface craft. I
-						care about hierarchy, pacing, micro-decisions, and the kind of details that make
-						an experience feel intentional rather than merely complete.
+						Most green coffee buyers researching India end up comparing a handful of well-known
+						districts without much context on how they differ — elevation, varietal, processing
+						tradition, or the kind of farms actually growing the coffee. This site exists to fill
+						that gap: plain information about Koraput, Halflong, the Chirang–Tirap Robusta belt,
+						and Chikmagalur–Bababudangiri, kept up to date as our own sourcing relationships in
+						each region evolve.
 					</p>
 				</div>
 			</section>
 
 			<section class="editorial-section">
 				<div class="section-rail">
-					<p class="section-kicker">How I Work</p>
+					<p class="section-kicker">Gray Cup Enterprises</p>
 				</div>
 				<div class="story-block">
 					<p>
-						I work best in the messy middle: when the requirements are incomplete, the product
-						has started to sprawl, and the team needs someone to create clarity without
-						oversimplifying the problem.
+						Gray Cup sources and exports Indian green coffee, chai, and CTC tea to roasters,
+						importers, and distributors worldwide. We work directly with tribal cooperatives in
+						Koraput, smallholder farms in Assam and Arunachal Pradesh, and estates in Karnataka —
+						handling grading, export documentation, and logistics in-house.
 					</p>
 					<p>
-						That usually means stepping back to understand the structure of the experience,
-						deciding what deserves attention first, and then building a visual system strong
-						enough to support that logic all the way through the final UI.
+						For current pricing, samples, and country-specific shipping, our wholesale ordering
+						site is <a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>.
+						This site stays focused on origin information rather than transactions.
 					</p>
 				</div>
 			</section>
 
 			<section class="editorial-section">
 				<div class="section-rail">
-					<p class="section-kicker">Focus</p>
+					<p class="section-kicker">Contact</p>
 				</div>
 				<div class="story-block">
 					<p>
-						I'm especially interested in dashboards, workflow tools, AI-assisted interfaces,
-						and products where reducing friction has a measurable impact on how confident people
-						feel using the system.
-					</p>
-					<p>
-						If something is too dense, too noisy, or too hard to follow, that's usually where I
-						can do my best work.
+						Questions about a specific origin, or want something covered that isn't here? Email
+						<a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
 					</p>
 				</div>
 			</section>
@@ -113,56 +100,19 @@ import portraitImage from '../assets/images/maria.webp';
 		letter-spacing: 0.08em;
 		line-height: 1.4;
 		text-transform: uppercase;
+		margin: 0;
+		color: var(--muted-foreground);
 	}
 
 	.hero {
 		padding: 6rem 0 4rem;
-	}
-
-	.hero-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 20rem);
-		gap: 2.5rem;
-		align-items: start;
-		margin-top: 1rem;
-	}
-
-	.hero-copy {
-		max-width: 52rem;
-	}
-
-	.eyebrow,
-	.section-kicker {
-		margin: 0;
-		color: var(--muted-foreground);
-		font-style: normal;
-	}
-
-	.hero-text,
-	.story-block p {
-		font-size: 1.08rem;
-		line-height: 1.7;
-		margin: 0;
+		max-width: 44rem;
 	}
 
 	.hero-text {
-		max-width: 44rem;
-		margin-top: 1.5rem;
-	}
-
-	.hero-portrait-wrap {
-		display: flex;
-		justify-content: flex-end;
-		align-self: start;
-		padding-top: 0.35rem;
-	}
-
-	.hero-portrait {
-		width: min(100%, 20rem);
-		height: auto;
-		display: block;
-		border-radius: 1.5rem;
-		box-shadow: 0 18px 40px rgba(23, 23, 23, 0.08);
+		font-size: 1.15rem;
+		line-height: 1.65;
+		margin: 1.5rem 0 0;
 	}
 
 	.editorial-section {
@@ -180,27 +130,18 @@ import portraitImage from '../assets/images/maria.webp';
 	.story-block {
 		display: grid;
 		gap: 1rem;
-		max-width: 52rem;
+		max-width: 46rem;
+		font-size: 1.05rem;
+		line-height: 1.7;
+	}
+
+	.story-block a {
+		color: var(--accent-link);
 	}
 
 	@media (max-width: 1100px) {
-		.hero-layout {
+		.editorial-section {
 			grid-template-columns: 1fr;
-			gap: 1.75rem;
-			align-items: start;
-		}
-
-		.hero-copy {
-			max-width: 100%;
-		}
-
-		.hero-text {
-			max-width: 42rem;
-		}
-
-		.hero-portrait-wrap {
-			justify-content: flex-start;
-			padding-top: 0;
 		}
 	}
 
@@ -214,17 +155,8 @@ import portraitImage from '../assets/images/maria.webp';
 			padding: 4rem 0 3rem;
 		}
 
-		.editorial-section {
-			grid-template-columns: 1fr;
-		}
-
-		.hero-text,
-		.story-block p {
+		.hero-text {
 			font-size: 1.05rem;
-		}
-
-		.hero-portrait {
-			width: min(100%, 16rem);
 		}
 	}
 </style>
