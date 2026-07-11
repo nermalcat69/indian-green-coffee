@@ -1,0 +1,149 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+
+const title = 'Our Sites | Gray Cup Enterprises Network';
+const description =
+	'The Gray Cup Enterprises network — origin guides, storefronts, and wholesale ordering sites for Indian green coffee, chai, and tea.';
+
+const breadcrumbSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{ '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.siteUrl },
+		{ '@type': 'ListItem', position: 2, name: 'Our Sites', item: `${siteConfig.siteUrl}/site` },
+	],
+};
+---
+
+<Layout title={title} description={description} schema={[breadcrumbSchema]}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<section class="hero">
+				<p class="eyebrow">Our Sites</p>
+				<h1 class="display-title">The Gray Cup network</h1>
+				<p class="hero-text">
+					Indian Green Coffee is one part of a small family of sites run by Gray Cup Enterprises —
+					covering origins, wholesale sourcing, and direct-to-consumer tea and coffee.
+				</p>
+			</section>
+
+			<section class="sites-grid" aria-label="Gray Cup Enterprises sites">
+				{
+					siteConfig.ecosystemLinks.map((site) => (
+						<a class="site-link" href={site.href} target="_blank" rel="noopener noreferrer">
+							<article class="site-card">
+								<h2 class="site-title">{site.label}</h2>
+								<p class="site-summary">{site.description}</p>
+								<p class="site-url">{site.href.replace('https://', '')}</p>
+							</article>
+						</a>
+					))
+				}
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 78rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.hero {
+		padding: 6rem 0 3.5rem;
+	}
+
+	.hero-text {
+		max-width: 42rem;
+		margin: 1.25rem 0 0;
+		font-size: 1.1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.sites-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.75rem;
+		padding-bottom: 4rem;
+	}
+
+	.site-link {
+		display: block;
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.site-card {
+		height: 100%;
+		padding: 1.75rem;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+		transition: border-color 0.2s ease, background-color 0.2s ease;
+	}
+
+	.site-link:hover .site-card,
+	.site-link:focus-visible .site-card {
+		border-color: var(--accent-link);
+		background-color: var(--muted);
+	}
+
+	.site-title {
+		margin: 0;
+		font-size: clamp(1.3rem, 1.8vw, 1.55rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.site-summary {
+		margin: 0.85rem 0 0;
+		font-size: 1rem;
+		line-height: 1.55;
+	}
+
+	.site-url {
+		margin: 1rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		color: var(--accent-link);
+	}
+
+	@media (max-width: 900px) {
+		.sites-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			width: min(calc(100% - 1.5rem), 78rem);
+			padding-top: 1rem;
+		}
+
+		.hero {
+			padding: 4rem 0 2.5rem;
+		}
+	}
+</style>

@@ -19,6 +19,20 @@ const currentYear = new Date().getFullYear();
 			)
 		}
 
+		<div class="shared-footer-ecosystem">
+			<p class="shared-footer-ecosystem-label">Part of the Gray Cup network</p>
+			<div class="shared-footer-ecosystem-links">
+				{
+					siteConfig.ecosystemLinks.map((site) => (
+						<a href={site.href} target="_blank" rel="noopener noreferrer">
+							{site.label}
+						</a>
+					))
+				}
+				<a href="/site">All our sites &rarr;</a>
+			</div>
+		</div>
+
 		<div class="shared-footer-meta">
 			<div class="shared-footer-links">
 				{
