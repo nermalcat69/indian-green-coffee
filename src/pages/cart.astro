@@ -1,0 +1,268 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+
+const title = 'Cart | Indian Green Coffee';
+const description = 'Review your wholesale green coffee order before checkout.';
+---
+
+<Layout title={title} description={description} noindex={true}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<header class="hero">
+				<p class="eyebrow">Cart</p>
+				<h1 class="display-title" style="font-size: clamp(2.4rem, 4vw, 3.6rem);">Your order</h1>
+			</header>
+
+			<div data-cart-empty hidden>
+				<p class="empty-text">
+					Your cart is empty. Browse the <a href="/products">catalogue</a> to add a lot.
+				</p>
+			</div>
+
+			<div data-cart-list class="cart-list"></div>
+
+			<section data-cart-summary class="cart-summary" hidden>
+				<div class="summary-row summary-total">
+					<span>Subtotal</span>
+					<span data-cart-subtotal>₹0</span>
+				</div>
+				<p class="summary-note">
+					Prices are indicative FOB India rates in INR per kg. Freight, duties, and export
+					documentation are arranged separately after checkout.
+				</p>
+				<a class="checkout-button" href="/checkout">Proceed to checkout</a>
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<script>
+	import { getCart, removeItem, updateQty } from '../lib/cart';
+	import { products } from '../data/products';
+
+	const listEl = document.querySelector<HTMLElement>('[data-cart-list]')!;
+	const emptyEl = document.querySelector<HTMLElement>('[data-cart-empty]')!;
+	const summaryEl = document.querySelector<HTMLElement>('[data-cart-summary]')!;
+	const subtotalEl = document.querySelector<HTMLElement>('[data-cart-subtotal]')!;
+
+	function fmt(n: number) {
+		return `₹${n.toLocaleString('en-IN')}`;
+	}
+
+	function render() {
+		const items = getCart();
+
+		if (items.length === 0) {
+			emptyEl.hidden = false;
+			summaryEl.hidden = true;
+			listEl.innerHTML = '';
+			return;
+		}
+
+		emptyEl.hidden = true;
+		summaryEl.hidden = false;
+
+		let subtotal = 0;
+		listEl.innerHTML = items
+			.map((item) => {
+				const product = products.find((p) => p.slug === item.slug);
+				if (!product) return '';
+				const lineTotal = Math.round(product.priceRange.min * item.qtyKg);
+				subtotal += lineTotal;
+				return `
+					<article class="cart-item">
+						<div class="cart-item-info">
+							<p class="cart-item-name"><a href="/products/${product.slug}">${product.name}</a></p>
+							<p class="cart-item-price">₹${product.priceRange.min}/kg · min ${product.minimumOrder.quantity}${product.minimumOrder.unit}</p>
+						</div>
+						<div class="cart-item-controls">
+							<label class="qty-label" for="qty-${product.slug}">Qty (kg)</label>
+							<input
+								id="qty-${product.slug}"
+								type="number"
+								min="${product.minimumOrder.quantity}"
+								step="1"
+								value="${item.qtyKg}"
+								data-qty-input
+								data-slug="${product.slug}"
+							/>
+							<p class="cart-item-total">${fmt(lineTotal)}</p>
+							<button type="button" data-remove data-slug="${product.slug}" aria-label="Remove ${product.name}">Remove</button>
+						</div>
+					</article>
+				`;
+			})
+			.join('');
+
+		subtotalEl.textContent = fmt(subtotal);
+	}
+
+	listEl.addEventListener('click', (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLElement)) return;
+		const button = target.closest<HTMLElement>('[data-remove]');
+		if (!button) return;
+		const slug = button.dataset.slug;
+		if (slug) {
+			removeItem(slug);
+			render();
+		}
+	});
+
+	listEl.addEventListener('change', (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLInputElement) || !target.dataset.qtyInput) return;
+		const slug = target.dataset.slug;
+		if (!slug) return;
+		const product = products.find((p) => p.slug === slug);
+		const qty = Math.max(Number(target.value) || 0, product?.minimumOrder.quantity ?? 1);
+		target.value = String(qty);
+		updateQty(slug, qty);
+		render();
+	});
+
+	render();
+</script>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 60rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.hero {
+		padding: 4rem 0 2.5rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.empty-text {
+		font-size: 1.05rem;
+		color: var(--muted-foreground);
+	}
+
+	.empty-text a {
+		color: var(--accent-link);
+	}
+
+	.cart-list {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.cart-item {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 1.25rem;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+	}
+
+	.cart-item-name {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 700;
+	}
+
+	.cart-item-name a {
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.cart-item-price {
+		margin: 0.35rem 0 0;
+		font-size: 0.9rem;
+		color: var(--muted-foreground);
+	}
+
+	.cart-item-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.qty-label {
+		font-size: 0.8rem;
+		color: var(--muted-foreground);
+	}
+
+	.cart-item-controls input[type='number'] {
+		width: 5rem;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--control-border);
+		border-radius: 0.6rem;
+	}
+
+	.cart-item-total {
+		margin: 0;
+		min-width: 6rem;
+		text-align: right;
+		font-weight: 700;
+	}
+
+	.cart-item-controls button {
+		padding: 0.5rem 0.85rem;
+		border: 1px solid var(--control-border);
+		border-radius: 0.6rem;
+		cursor: pointer;
+		font-weight: 600;
+		font-size: 0.85rem;
+	}
+
+	.cart-item-controls button:hover {
+		background: var(--muted);
+	}
+
+	.cart-summary {
+		margin-top: 2rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.summary-row {
+		display: flex;
+		justify-content: space-between;
+		font-size: 1.2rem;
+		font-weight: 800;
+	}
+
+	.summary-note {
+		margin: 0.85rem 0 0;
+		font-size: 0.9rem;
+		color: var(--muted-foreground);
+	}
+
+	.checkout-button {
+		display: inline-block;
+		margin-top: 1.5rem;
+		padding: 0.9rem 1.6rem;
+		background: var(--foreground);
+		color: var(--background);
+		border-radius: 999px;
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.checkout-button:hover {
+		opacity: 0.85;
+	}
+</style>

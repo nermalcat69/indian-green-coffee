@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+
+const title = 'Order confirmation | Indian Green Coffee';
+const description = 'Your wholesale green coffee order confirmation.';
+---
+
+<Layout title={title} description={description} noindex={true}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<div class="status-card" data-status="checking">
+				<p class="status-icon" data-status-icon>…</p>
+				<h1 data-status-title>Checking your payment…</h1>
+				<p class="status-text" data-status-text>Hang tight, this only takes a moment.</p>
+				<a class="back-link" href="/products">Back to catalogue</a>
+			</div>
+		</main>
+	</div>
+</Layout>
+
+<script>
+	import { clearCart } from '../../lib/cart';
+
+	const card = document.querySelector<HTMLElement>('.status-card')!;
+	const iconEl = document.querySelector<HTMLElement>('[data-status-icon]')!;
+	const titleEl = document.querySelector<HTMLElement>('[data-status-title]')!;
+	const textEl = document.querySelector<HTMLElement>('[data-status-text]')!;
+
+	function setStatus(status: 'paid' | 'pending' | 'failed' | 'error', title: string, text: string, icon: string) {
+		card.dataset.status = status;
+		iconEl.textContent = icon;
+		titleEl.textContent = title;
+		textEl.textContent = text;
+	}
+
+	const orderId = new URLSearchParams(window.location.search).get('order_id');
+
+	if (!orderId) {
+		setStatus('error', 'Order not found', 'We could not find an order reference in the URL.', '!');
+	} else {
+		fetch(`/api/order-status?order_id=${encodeURIComponent(orderId)}`)
+			.then((res) => res.json())
+			.then((data) => {
+				if (data.paymentStatus === 'paid') {
+					clearCart();
+					setStatus(
+						'paid',
+						'Order placed!',
+						"Payment received. We'll email your invoice and be in touch to confirm dispatch.",
+						'✓'
+					);
+				} else if (data.paymentStatus === 'failed') {
+					setStatus('failed', 'Payment failed', 'Your payment did not go through. Please try again from your cart.', '×');
+				} else {
+					setStatus(
+						'pending',
+						'Payment pending',
+						"We haven't received confirmation yet. If you completed payment, this page will update shortly — refresh if needed.",
+						'…'
+					);
+				}
+			})
+			.catch(() => {
+				setStatus('error', 'Something went wrong', 'We could not check your order status. Contact us if you were charged.', '!');
+			});
+	}
+</script>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 40rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.status-card {
+		margin-top: 5rem;
+		padding: 3rem 2rem;
+		text-align: center;
+		border: 1px solid var(--border);
+		border-radius: 1.25rem;
+	}
+
+	.status-icon {
+		margin: 0 auto 1rem;
+		width: 3rem;
+		height: 3rem;
+		display: grid;
+		place-items: center;
+		border-radius: 50%;
+		background: var(--muted);
+		font-size: 1.4rem;
+		font-weight: 800;
+	}
+
+	.status-card[data-status='paid'] .status-icon {
+		background: var(--selection);
+	}
+
+	.status-card[data-status='failed'] .status-icon,
+	.status-card[data-status='error'] .status-icon {
+		background: #fdecec;
+		color: #a02323;
+	}
+
+	.status-card h1 {
+		margin: 0;
+		font-size: 1.6rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.status-text {
+		margin: 1rem 0 0;
+		font-size: 1rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.back-link {
+		display: inline-block;
+		margin-top: 1.75rem;
+		color: var(--accent-link);
+		text-decoration: none;
+		font-weight: 600;
+	}
+</style>

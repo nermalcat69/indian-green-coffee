@@ -1,0 +1,314 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+
+const title = 'Checkout | Indian Green Coffee';
+const description = 'Complete your wholesale green coffee order.';
+---
+
+<Layout title={title} description={description} noindex={true}>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="page">
+		<SiteHeader />
+
+		<main id="main-content">
+			<header class="hero">
+				<p class="eyebrow">Checkout</p>
+				<h1 class="display-title" style="font-size: clamp(2.4rem, 4vw, 3.6rem);">Checkout</h1>
+			</header>
+
+			<div data-checkout-empty hidden>
+				<p class="empty-text">
+					Your cart is empty. Browse the <a href="/products">catalogue</a> to add a lot.
+				</p>
+			</div>
+
+			<div class="checkout-grid" data-checkout-grid>
+				<form data-checkout-form class="checkout-form" novalidate>
+					<div class="field">
+						<label for="name">Full name</label>
+						<input id="name" name="name" type="text" required />
+					</div>
+					<div class="field">
+						<label for="phone">Phone number</label>
+						<input id="phone" name="phone" type="tel" required />
+					</div>
+					<div class="field">
+						<label for="email">Email address</label>
+						<input id="email" name="email" type="email" required />
+					</div>
+					<div class="field">
+						<label for="gstNumber">GST number (optional)</label>
+						<input id="gstNumber" name="gstNumber" type="text" />
+					</div>
+					<div class="field">
+						<label for="addressLine1">Delivery address</label>
+						<input id="addressLine1" name="addressLine1" type="text" required />
+					</div>
+					<div class="field">
+						<label for="addressLine2">Address line 2 (optional)</label>
+						<input id="addressLine2" name="addressLine2" type="text" />
+					</div>
+					<div class="field-row">
+						<div class="field">
+							<label for="city">City</label>
+							<input id="city" name="city" type="text" required />
+						</div>
+						<div class="field">
+							<label for="state">State</label>
+							<input id="state" name="state" type="text" required />
+						</div>
+						<div class="field">
+							<label for="pincode">Pincode</label>
+							<input id="pincode" name="pincode" type="text" required />
+						</div>
+					</div>
+					<div class="field">
+						<label for="notes">Notes (optional)</label>
+						<textarea id="notes" name="notes" rows="3"></textarea>
+					</div>
+
+					<p class="form-error" data-checkout-error hidden></p>
+
+					<button type="submit" class="submit-button" data-checkout-submit>
+						Pay with Cashfree
+					</button>
+				</form>
+
+				<aside class="order-summary">
+					<h2>Order summary</h2>
+					<div data-checkout-items></div>
+					<div class="summary-row">
+						<span>Total</span>
+						<span data-checkout-total>₹0</span>
+					</div>
+				</aside>
+			</div>
+		</main>
+	</div>
+</Layout>
+
+<script>
+	import { load } from '@cashfreepayments/cashfree-js';
+	import { getCart } from '../lib/cart';
+	import { products } from '../data/products';
+
+	const grid = document.querySelector<HTMLElement>('[data-checkout-grid]')!;
+	const emptyEl = document.querySelector<HTMLElement>('[data-checkout-empty]')!;
+	const itemsEl = document.querySelector<HTMLElement>('[data-checkout-items]')!;
+	const totalEl = document.querySelector<HTMLElement>('[data-checkout-total]')!;
+	const form = document.querySelector<HTMLFormElement>('[data-checkout-form]')!;
+	const errorEl = document.querySelector<HTMLElement>('[data-checkout-error]')!;
+	const submitButton = document.querySelector<HTMLButtonElement>('[data-checkout-submit]')!;
+
+	function fmt(n: number) {
+		return `₹${n.toLocaleString('en-IN')}`;
+	}
+
+	const cart = getCart();
+
+	if (cart.length === 0) {
+		emptyEl.hidden = false;
+		grid.hidden = true;
+	} else {
+		let total = 0;
+		itemsEl.innerHTML = cart
+			.map((item) => {
+				const product = products.find((p) => p.slug === item.slug);
+				if (!product) return '';
+				const lineTotal = Math.round(product.priceRange.min * item.qtyKg);
+				total += lineTotal;
+				return `
+					<div class="summary-line">
+						<span>${product.name} × ${item.qtyKg}kg</span>
+						<span>${fmt(lineTotal)}</span>
+					</div>
+				`;
+			})
+			.join('');
+		totalEl.textContent = fmt(total);
+	}
+
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		errorEl.hidden = true;
+		submitButton.disabled = true;
+		submitButton.textContent = 'Processing…';
+
+		const formData = new FormData(form);
+		const body = {
+			name: String(formData.get('name') ?? ''),
+			phone: String(formData.get('phone') ?? ''),
+			email: String(formData.get('email') ?? ''),
+			gstNumber: String(formData.get('gstNumber') ?? ''),
+			addressLine1: String(formData.get('addressLine1') ?? ''),
+			addressLine2: String(formData.get('addressLine2') ?? ''),
+			city: String(formData.get('city') ?? ''),
+			state: String(formData.get('state') ?? ''),
+			pincode: String(formData.get('pincode') ?? ''),
+			notes: String(formData.get('notes') ?? ''),
+			items: getCart(),
+		};
+
+		try {
+			const res = await fetch('/api/checkout', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify(body),
+			});
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data?.error ?? 'Something went wrong. Please try again.');
+			}
+
+			const cashfree = await load({
+				mode: import.meta.env.PUBLIC_CASHFREE_MODE === 'production' ? 'production' : 'sandbox',
+			});
+			await cashfree?.checkout({
+				paymentSessionId: data.paymentSessionId,
+				redirectTarget: '_self',
+			});
+		} catch (err) {
+			errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+			errorEl.hidden = false;
+			submitButton.disabled = false;
+			submitButton.textContent = 'Pay with Cashfree';
+		}
+	});
+</script>
+
+<style>
+	.page {
+		position: relative;
+		width: min(calc(100% - 3rem), 68rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.hero {
+		padding: 4rem 0 2.5rem;
+	}
+
+	.eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.empty-text {
+		font-size: 1.05rem;
+		color: var(--muted-foreground);
+	}
+
+	.empty-text a {
+		color: var(--accent-link);
+	}
+
+	.checkout-grid {
+		display: grid;
+		grid-template-columns: 1.4fr 1fr;
+		gap: 3rem;
+		align-items: start;
+	}
+
+	.checkout-form {
+		display: grid;
+		gap: 1.1rem;
+	}
+
+	.field {
+		display: grid;
+		gap: 0.4rem;
+	}
+
+	.field-row {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1rem;
+	}
+
+	label {
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	input,
+	textarea {
+		padding: 0.7rem 0.85rem;
+		border: 1px solid var(--control-border);
+		border-radius: 0.65rem;
+		font-size: 0.95rem;
+	}
+
+	.form-error {
+		margin: 0;
+		padding: 0.75rem 1rem;
+		background: #fdecec;
+		color: #a02323;
+		border-radius: 0.65rem;
+		font-size: 0.9rem;
+	}
+
+	.submit-button {
+		margin-top: 0.5rem;
+		padding: 0.95rem 1.6rem;
+		background: var(--foreground);
+		color: var(--background);
+		border-radius: 999px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.submit-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.order-summary {
+		position: sticky;
+		top: 2rem;
+		padding: 1.5rem;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+	}
+
+	.order-summary h2 {
+		margin: 0 0 1rem;
+		font-size: 1.1rem;
+	}
+
+	.summary-line {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		font-size: 0.92rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.summary-row {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 1rem;
+		padding-top: 1rem;
+		font-size: 1.1rem;
+		font-weight: 800;
+		border-top: 1px solid var(--border);
+	}
+
+	@media (max-width: 820px) {
+		.checkout-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.field-row {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

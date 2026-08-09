@@ -145,17 +145,53 @@ const schema = [
 				</div>
 			</section>
 
-			<section class="cta">
-				<h2>Interested in {product.name}?</h2>
-				<p>
-					Get current pricing, sample availability, and shipping to your country at
-					<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>,
-					or email <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
+			<section class="cta add-to-cart" data-product-slug={product.slug} data-min-qty={product.minimumOrder.quantity}>
+				<h2>Order {product.name}</h2>
+				<div class="add-to-cart-row">
+					<label for="qty">
+						Quantity ({product.minimumOrder.unit}) — min {product.minimumOrder.quantity}
+					</label>
+					<input
+						id="qty"
+						type="number"
+						min={product.minimumOrder.quantity}
+						step="1"
+						value={product.minimumOrder.quantity}
+						data-qty-input
+					/>
+					<button type="button" data-add-to-cart>Add to cart</button>
+				</div>
+				<p class="add-to-cart-note" data-add-to-cart-note hidden></p>
+				<p class="alt-contact">
+					For samples, custom quotes, or shipping to your country, you can also reach us at
+					<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
+					or <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
 				</p>
 			</section>
 		</main>
 	</div>
 </Layout>
+
+<script>
+	import { addItem } from '../../lib/cart';
+
+	document.querySelectorAll<HTMLElement>('.add-to-cart').forEach((section) => {
+		const slug = section.dataset.productSlug;
+		const minQty = Number(section.dataset.minQty ?? '1');
+		const input = section.querySelector<HTMLInputElement>('[data-qty-input]');
+		const button = section.querySelector<HTMLButtonElement>('[data-add-to-cart]');
+		const note = section.querySelector<HTMLElement>('[data-add-to-cart-note]');
+		if (!slug || !input || !button || !note) return;
+
+		button.addEventListener('click', () => {
+			const qty = Math.max(Number(input.value) || 0, minQty);
+			input.value = String(qty);
+			addItem(slug, qty);
+			note.hidden = false;
+			note.textContent = `${qty}kg added to cart.`;
+		});
+	});
+</script>
 
 <style>
 	.page {
@@ -266,6 +302,55 @@ const schema = [
 
 	.cta a {
 		color: var(--accent-link);
+	}
+
+	.add-to-cart-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		gap: 1rem;
+		margin-top: 1.25rem;
+	}
+
+	.add-to-cart-row label {
+		display: block;
+		margin-bottom: 0.4rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--muted-foreground);
+	}
+
+	.add-to-cart-row input {
+		width: 7rem;
+		padding: 0.7rem 0.85rem;
+		border: 1px solid var(--control-border);
+		border-radius: 0.65rem;
+		font-size: 0.95rem;
+	}
+
+	.add-to-cart-row button {
+		padding: 0.85rem 1.5rem;
+		background: var(--foreground);
+		color: var(--background);
+		border-radius: 999px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.add-to-cart-row button:hover {
+		opacity: 0.85;
+	}
+
+	.add-to-cart-note {
+		margin: 0.85rem 0 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.alt-contact {
+		margin: 1.5rem 0 0;
+		font-size: 0.92rem;
+		color: var(--muted-foreground);
 	}
 
 	@media (max-width: 720px) {

@@ -38,6 +38,11 @@ const mobileSubmenuPanelId = 'shared-mobile-submenu-panel';
 					))}
 				</div>
 			</div>
+
+			<a class="shared-cart-link" href="/cart" aria-label="View cart">
+				Cart
+				<span class="shared-cart-count" data-cart-count hidden>0</span>
+			</a>
 		</nav>
 
 		<details class="shared-nav-mobile">
@@ -60,6 +65,11 @@ const mobileSubmenuPanelId = 'shared-mobile-submenu-panel';
 				</a>
 
 				{siteConfig.navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+
+				<a href="/cart">
+					Cart
+					<span class="shared-cart-count" data-cart-count hidden>0</span>
+				</a>
 
 				<details class="shared-mobile-submenu">
 					<summary
@@ -139,6 +149,7 @@ const mobileSubmenuPanelId = 'shared-mobile-submenu-panel';
 		menu.addEventListener('mouseleave', () => setExpanded(false));
 	})();
 
+
 	(() => {
 		const mobileMenu = document.querySelector('.shared-nav-mobile');
 		if (!(mobileMenu instanceof HTMLDetailsElement)) return;
@@ -211,4 +222,22 @@ const mobileSubmenuPanelId = 'shared-mobile-submenu-panel';
 		window.addEventListener('pagehide', () => root.classList.remove(lockClass));
 		syncScrollLock();
 	})();
+</script>
+
+<script>
+	import { CART_CHANGE_EVENT, CART_STORAGE_KEY, cartCount } from '../lib/cart';
+
+	function syncCartBadges() {
+		const count = cartCount();
+		document.querySelectorAll<HTMLElement>('[data-cart-count]').forEach((el) => {
+			el.textContent = String(count);
+			el.hidden = count === 0;
+		});
+	}
+
+	window.addEventListener(CART_CHANGE_EVENT, syncCartBadges);
+	window.addEventListener('storage', (event) => {
+		if (event.key === CART_STORAGE_KEY) syncCartBadges();
+	});
+	syncCartBadges();
 </script>
