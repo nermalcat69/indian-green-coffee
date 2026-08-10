@@ -76,12 +76,15 @@ saved consent in `localStorage`, and a footer "Cookie Preferences" button. See [
 
 ## Deployment
 
-Included config:
+Deploys to Cloudflare Workers via [@astrojs/cloudflare](https://docs.astro.build/en/guides/integrations-guide/cloudflare/), configured in [wrangler.jsonc](./wrangler.jsonc).
 
-- [netlify.toml](./netlify.toml)
-- [vercel.json](./vercel.json)
+- `npm run dev` — local dev server (`astro dev`, reads `.env`)
+- `npm run preview` — build and run in a local Workers runtime (`wrangler dev`, reads `.dev.vars`)
+- `npm run deploy` — build and deploy (`wrangler deploy`)
 
-If you only deploy to one platform, delete the other config file so platform auto-detection stays predictable.
+Runtime secrets (`DATABASE_URL`, `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`) must be set as Worker secrets
+(`wrangler secret put <NAME>` or the Cloudflare dashboard) for production, and in `.dev.vars` for local
+`wrangler dev` — see [.env.example](./.env.example) for the full list.
 
 ## License
 

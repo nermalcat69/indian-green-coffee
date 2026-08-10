@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import vercel from '@astrojs/vercel';
+import cloudflare from '@astrojs/cloudflare';
 import tailwindcss from '@tailwindcss/vite';
 import { siteConfig } from './src/config/site.ts';
 
@@ -20,7 +20,7 @@ if (usingFallbackSiteUrl) {
 // https://astro.build/config
 export default defineConfig({
 	site: siteConfig.siteUrl,
-	adapter: vercel(),
+	adapter: cloudflare(),
 	integrations: [
 		mdx(),
 		sitemap({
