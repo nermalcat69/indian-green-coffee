@@ -1,5 +1,7 @@
 import type { ImageMetadata } from 'astro';
-import koraputImage from '../assets/images/products/koraput.png';
+import koraputNaturalsImage from '../assets/images/products/koraput-naturals.webp';
+import koraputWashedImage from '../assets/images/products/koraput-washed.webp';
+import koraputGreenImage from '../assets/images/products/koraput-green.webp';
 import halflongImage from '../assets/images/products/halflong.webp';
 import chirangImage from '../assets/images/products/chirang.webp';
 import tirapImage from '../assets/images/products/tirap.webp';
@@ -43,8 +45,8 @@ export const products: Product[] = [
 		description:
 			'Sun-dried whole cherry on raised bamboo beds for three to five weeks, producing an intense, fruit-forward cup with heavy body. Aggregated from Kondh, Gadaba, and Poraja smallholder farms across the Koraput plateau.',
 		sku: 'IGC-KOR-NAT',
-		image: koraputImage,
-		imageAlt: 'A bowl of raw green coffee beans from Koraput, Odisha',
+		image: koraputNaturalsImage,
+		imageAlt: 'Natural-process Koraput coffee cherries drying on raised beds in Odisha',
 	},
 	{
 		slug: 'koraput-hsd',
@@ -62,8 +64,8 @@ export const products: Product[] = [
 		description:
 			'Parchment is dried with the mucilage intact rather than washed off, giving a sweeter, more structured cup than the fully natural lots from the same farms. The highest-scoring processing style currently coming out of Koraput.',
 		sku: 'IGC-KOR-HSD',
-		image: koraputImage,
-		imageAlt: 'A bowl of raw green coffee beans from Koraput, Odisha',
+		image: koraputNaturalsImage,
+		imageAlt: 'Honey-processed Koraput coffee cherries drying on raised beds in Odisha',
 	},
 	{
 		slug: 'koraput-washed',
@@ -81,8 +83,8 @@ export const products: Product[] = [
 		description:
 			'Fermented and washed where water access allows, producing a cleaner, brighter cup than the region’s dominant natural-process lots — a useful comparison point for buyers evaluating Koraput’s processing range.',
 		sku: 'IGC-KOR-WSH',
-		image: koraputImage,
-		imageAlt: 'A bowl of raw green coffee beans from Koraput, Odisha',
+		image: koraputWashedImage,
+		imageAlt: 'Washed Koraput parchment coffee drying on raised beds in Odisha',
 	},
 	{
 		slug: 'koraput-commercial-aaa',
@@ -99,8 +101,8 @@ export const products: Product[] = [
 		description:
 			'The same tribal-farmed Koraput naturals, sorted to a commercial AAA screen size rather than cupped for specialty scoring — the entry point for buyers who want Indian origin character without specialty pricing.',
 		sku: 'IGC-KOR-AAA',
-		image: koraputImage,
-		imageAlt: 'A bowl of raw green coffee beans from Koraput, Odisha',
+		image: koraputGreenImage,
+		imageAlt: 'A bowl of graded green coffee beans from Koraput, Odisha',
 	},
 	{
 		slug: 'halflong-arabica-naturals',
