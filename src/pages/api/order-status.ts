@@ -1,10 +1,9 @@
 import type { APIRoute } from 'astro';
-import { eq } from 'drizzle-orm';
-import { getDb, order } from '../../lib/db';
+import { getOrderStatus, type GraycupOrdersEnv } from '../../lib/db';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, locals }) => {
 	const orderId = url.searchParams.get('order_id');
 	if (!orderId) {
 		return new Response(JSON.stringify({ error: 'order_id is required' }), {
@@ -14,21 +13,17 @@ export const GET: APIRoute = async ({ url }) => {
 	}
 
 	try {
-		const db = getDb();
-		const [row] = await db
-			.select({ paymentStatus: order.paymentStatus })
-			.from(order)
-			.where(eq(order.id, orderId))
-			.limit(1);
+		const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
+		const status = await getOrderStatus(env, orderId);
 
-		if (!row) {
+		if (!status) {
 			return new Response(JSON.stringify({ error: 'Order not found' }), {
 				status: 404,
 				headers: { 'content-type': 'application/json' },
 			});
 		}
 
-		return new Response(JSON.stringify({ paymentStatus: row.paymentStatus }), {
+		return new Response(JSON.stringify({ paymentStatus: status.toLowerCase() }), {
 			status: 200,
 			headers: { 'content-type': 'application/json' },
 		});

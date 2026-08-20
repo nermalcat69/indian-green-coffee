@@ -1,7 +1,9 @@
 ---
+import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import { origins } from '../data/origins';
+import { origins, getOriginBySlug } from '../data/origins';
+import { products } from '../data/products';
 import { siteConfig } from '../config/site';
 
 const schema = [
@@ -59,6 +61,81 @@ const schema = [
 				</div>
 			</section>
 
+			<section class="shop" id="shop" aria-labelledby="shop-heading">
+				<h2 id="shop-heading" class="section-title">Shop the catalogue</h2>
+				<div class="shop-grid">
+					{
+						products.map((product) => {
+							const origin = getOriginBySlug(product.originSlug);
+							return (
+								<article
+									class={`product-card accent-card ${product.accent}`}
+									data-product-card
+									data-slug={product.slug}
+									data-name={product.name}
+									data-price={product.priceRange.min}
+									data-min-qty={product.minimumOrder.quantity}
+								>
+									<a class="product-card-image-link" href={`/products/${product.slug}`}>
+										<Image
+											src={product.image}
+											alt={product.imageAlt}
+											loading="lazy"
+											decoding="async"
+											widths={[240, 360, 480]}
+											sizes="(max-width: 640px) 90vw, 20rem"
+											class="product-card-image"
+										/>
+									</a>
+
+									<div class="product-card-body">
+										<p class="product-card-origin">{origin?.name}, {origin?.state}</p>
+										<a class="product-card-title-link" href={`/products/${product.slug}`}>
+											<h3 class="product-card-title">{product.name}</h3>
+										</a>
+										<p class="product-card-meta">
+											{product.process}
+											{product.scaScore ? ` · SCA ${product.scaScore}` : ''}
+										</p>
+										<p class="product-card-price">
+											₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}
+											<span class="product-card-moq">min {product.minimumOrder.quantity}{product.minimumOrder.unit}</span>
+										</p>
+
+										<div class="product-card-qty">
+											<span class="product-card-qty-label">Qty (kg)</span>
+											<div class="qty-stepper">
+												<button type="button" class="qty-btn" data-qty-dec aria-label={`Decrease quantity for ${product.name}`}>−</button>
+												<input
+													type="number"
+													class="qty-value"
+													data-qty-input
+													min={product.minimumOrder.quantity}
+													step={product.minimumOrder.quantity <= 10 ? 1 : 10}
+													value={product.minimumOrder.quantity}
+													aria-label={`Quantity in kg for ${product.name}`}
+												/>
+												<button type="button" class="qty-btn" data-qty-inc aria-label={`Increase quantity for ${product.name}`}>+</button>
+											</div>
+										</div>
+
+										<div class="product-card-actions">
+											<button type="button" class="btn-buy-now" data-buy-now>
+												Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min * product.minimumOrder.quantity).toLocaleString('en-IN')}</span>
+											</button>
+											<button type="button" class="btn-add-cart" data-add-to-cart>
+												Add to cart
+											</button>
+										</div>
+										<p class="product-card-note" data-add-to-cart-note hidden></p>
+									</div>
+								</article>
+							);
+						})
+					}
+				</div>
+			</section>
+
 			<section class="origins" id="origins" aria-labelledby="origins-heading">
 				<h2 id="origins-heading" class="section-title">Four origins, four very different cups</h2>
 				<div class="origins-grid">
@@ -79,6 +156,65 @@ const schema = [
 		</main>
 	</div>
 </Layout>
+
+<script>
+	import { addItem } from '../lib/cart';
+
+	function fmt(n: number) {
+		return `₹${Math.round(n).toLocaleString('en-IN')}`;
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-product-card]').forEach((card) => {
+		const slug = card.dataset.slug;
+		const pricePerKg = Number(card.dataset.price ?? 0);
+		const minQty = Number(card.dataset.minQty ?? 1);
+		const qtyInput = card.querySelector<HTMLInputElement>('[data-qty-input]');
+		const decBtn = card.querySelector<HTMLButtonElement>('[data-qty-dec]');
+		const incBtn = card.querySelector<HTMLButtonElement>('[data-qty-inc]');
+		const buyNowTotal = card.querySelector<HTMLElement>('[data-buy-now-total]');
+		const addBtn = card.querySelector<HTMLButtonElement>('[data-add-to-cart]');
+		const buyBtn = card.querySelector<HTMLButtonElement>('[data-buy-now]');
+		const note = card.querySelector<HTMLElement>('[data-add-to-cart-note]');
+		if (!slug || !qtyInput) return;
+
+		const step = Number(qtyInput.step) || 1;
+
+		function currentQty(): number {
+			return Math.max(Number(qtyInput!.value) || 0, minQty);
+		}
+
+		function syncTotal() {
+			if (buyNowTotal) buyNowTotal.textContent = fmt(pricePerKg * currentQty());
+		}
+
+		function setQty(next: number) {
+			const clamped = Math.max(minQty, next);
+			qtyInput!.value = String(clamped);
+			syncTotal();
+		}
+
+		decBtn?.addEventListener('click', () => setQty(currentQty() - step));
+		incBtn?.addEventListener('click', () => setQty(currentQty() + step));
+		qtyInput.addEventListener('change', () => setQty(currentQty()));
+
+		addBtn?.addEventListener('click', () => {
+			const qty = currentQty();
+			addItem(slug, qty);
+			if (note) {
+				note.hidden = false;
+				note.textContent = `${qty}kg added to cart.`;
+				window.setTimeout(() => {
+					note.hidden = true;
+				}, 2500);
+			}
+		});
+
+		buyBtn?.addEventListener('click', () => {
+			addItem(slug, currentQty());
+			window.location.href = '/checkout';
+		});
+	});
+</script>
 
 <style>
 	.page {
@@ -121,6 +257,192 @@ const schema = [
 		font-size: clamp(1.6rem, 2.4vw, 2.1rem);
 		font-weight: 800;
 		letter-spacing: -0.04em;
+	}
+
+	.shop {
+		padding: 2rem 0 4rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.shop-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+		gap: 1.75rem;
+	}
+
+	.product-card {
+		display: flex;
+		flex-direction: column;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.product-card-image-link {
+		display: block;
+		aspect-ratio: 4 / 3;
+		overflow: hidden;
+	}
+
+	.product-card-image-link :global(img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		transition: transform 220ms ease;
+	}
+
+	.product-card-image-link:hover :global(img) {
+		transform: scale(1.04);
+	}
+
+	.product-card-body {
+		padding: 1.4rem 1.5rem 1.6rem;
+	}
+
+	.product-card-origin {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.76rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		opacity: 0.72;
+	}
+
+	.product-card-title-link {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.product-card-title {
+		margin: 0.5rem 0 0;
+		font-size: 1.2rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		line-height: 1.25;
+	}
+
+	.product-card-meta {
+		margin: 0.6rem 0 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		opacity: 0.72;
+	}
+
+	.product-card-price {
+		margin: 0.6rem 0 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		font-size: 1rem;
+		font-weight: 800;
+	}
+
+	.product-card-moq {
+		font-size: 0.75rem;
+		font-weight: 600;
+		opacity: 0.65;
+	}
+
+	.product-card-qty {
+		margin-top: 1.1rem;
+	}
+
+	.product-card-qty-label {
+		display: block;
+		margin-bottom: 0.4rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.72;
+	}
+
+	.qty-stepper {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(255, 255, 255, 0.55);
+		border: 1px solid rgba(23, 23, 23, 0.18);
+		border-radius: 0.75rem;
+		overflow: hidden;
+	}
+
+	.qty-btn {
+		width: 2.4rem;
+		height: 2.4rem;
+		display: grid;
+		place-items: center;
+		background: transparent;
+		border: none;
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.qty-btn:hover {
+		background: rgba(23, 23, 23, 0.08);
+	}
+
+	.qty-value {
+		width: 3.6rem;
+		text-align: center;
+		border: none;
+		background: transparent;
+		font-size: 0.95rem;
+		font-weight: 800;
+		color: inherit;
+		-moz-appearance: textfield;
+	}
+
+	.qty-value::-webkit-outer-spin-button,
+	.qty-value::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	.product-card-actions {
+		display: grid;
+		gap: 0.6rem;
+		margin-top: 1.1rem;
+	}
+
+	.btn-buy-now,
+	.btn-add-cart {
+		padding: 0.75rem 1rem;
+		border-radius: 999px;
+		font-weight: 700;
+		font-size: 0.9rem;
+		cursor: pointer;
+		text-align: center;
+	}
+
+	.btn-buy-now {
+		background: #171717;
+		color: #fff;
+		border: 1px solid #171717;
+	}
+
+	.btn-buy-now:hover {
+		opacity: 0.85;
+	}
+
+	.btn-add-cart {
+		background: transparent;
+		color: inherit;
+		border: 1px solid rgba(23, 23, 23, 0.28);
+	}
+
+	.btn-add-cart:hover {
+		background: rgba(23, 23, 23, 0.08);
+	}
+
+	.product-card-note {
+		margin: 0.7rem 0 0;
+		font-size: 0.82rem;
+		font-weight: 700;
+		text-align: center;
 	}
 
 	.origins {

@@ -1,54 +1,143 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { boolean, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+// Orders live directly in the shared "graycup-orders" D1 database — the same
+// database orders-graycup's admin dashboard reads from (binding "DB" there,
+// "GRAYCUP_ORDERS_DB" here — see wrangler.jsonc). No separate Postgres store;
+// this table is the source of truth for indian-green-coffee's orders.
+// Schema: migrations/0001_create_indian_green_coffee_orders.sql
 
-// ─── Shared retail database — mirrors orders-graycup's `order` table exactly ──
-// orders-graycup (lib/db/schema.ts, exported as `storefrontOrder`) and
-// graycup-in-storefront both read/write this same physical table. Column names,
-// types, and defaults here MUST stay in lockstep with that file so rows created
-// here show up correctly in the orders-graycup admin dashboard.
-export const order = pgTable('order', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	userId: text('user_id'),
-	addressSnapshot: jsonb('address_snapshot').notNull(),
-	items: jsonb('items').notNull(),
-	subtotal: numeric('subtotal', { precision: 10, scale: 2 }).notNull(),
-	deliveryCharge: numeric('delivery_charge', { precision: 10, scale: 2 }).notNull().default('0'),
-	totalAmount: numeric('total_amount', { precision: 10, scale: 2 }).notNull(),
-	paymentStatus: text('payment_status').notNull().default('pending'),
-	cashfreeOrderId: text('cashfree_order_id').unique(),
-	cashfreePaymentId: text('cashfree_payment_id'),
-	gstNumber: text('gst_number'),
-	customerName: text('customer_name').notNull().default(''),
-	customerEmail: text('customer_email').notNull().default(''),
-	customerPhone: text('customer_phone').notNull().default(''),
-	delhiveryTrackingId: text('delhivery_tracking_id'),
-	isFulfilled: boolean('is_fulfilled').notNull().default(false),
-	carrier: text('carrier'),
-	shadowfaxRequestId: text('shadowfax_request_id'),
-	delhiveryPickupDate: text('delhivery_pickup_date'),
-	dispatchStatus: text('dispatch_status'),
-	notes: text('notes'),
-	couponCode: text('coupon_code'),
-	discountAmount: numeric('discount_amount', { precision: 10, scale: 2 }).notNull().default('0'),
-	couponUsageCounted: boolean('coupon_usage_counted').notNull().default(false),
-	createdAt: timestamp('created_at').notNull().defaultNow(),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export interface D1Like {
+	prepare(query: string): {
+		bind(...values: unknown[]): {
+			run(): Promise<unknown>;
+			first<T = unknown>(): Promise<T | null>;
+		};
+	};
+}
 
-const schema = { order };
+export interface GraycupOrdersEnv {
+	GRAYCUP_ORDERS_DB?: D1Like;
+}
 
-// ─── Lazy singleton connection (same pattern as orders-graycup/lib/db/index.ts) ──
+export type OrderLineItem = {
+	slug: string;
+	name: string;
+	qtyKg: number;
+	pricePerKg: number;
+	lineTotal: number;
+};
 
-let _client: ReturnType<typeof postgres> | null = null;
-let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+export type NewOrder = {
+	orderId: string;
+	customerName: string;
+	customerEmail: string;
+	customerPhone: string;
+	gstNumber: string | null;
+	addressLine1: string;
+	addressLine2: string | null;
+	city: string;
+	state: string;
+	pincode: string;
+	notes: string | null;
+	items: OrderLineItem[];
+	subtotal: number;
+	total: number;
+};
 
-export function getDb() {
-	if (!_db) {
-		const url = import.meta.env.DATABASE_URL;
-		if (!url) throw new Error('DATABASE_URL is not set');
-		_client = postgres(url, { max: 5, idle_timeout: 20, connect_timeout: 10 });
-		_db = drizzle(_client, { schema });
+function nowUnixSeconds(): number {
+	return Math.floor(Date.now() / 1000);
+}
+
+function requireDb(env: GraycupOrdersEnv | undefined): D1Like {
+	const db = env?.GRAYCUP_ORDERS_DB;
+	if (!db) {
+		throw new Error('GRAYCUP_ORDERS_DB is not bound — check wrangler.jsonc d1_databases config');
 	}
-	return _db;
+	return db;
+}
+
+export async function insertOrder(env: GraycupOrdersEnv | undefined, order: NewOrder): Promise<void> {
+	const db = requireDb(env);
+	const now = nowUnixSeconds();
+	await db
+		.prepare(
+			`INSERT INTO indian_green_coffee_orders (
+				order_id, customer_name, customer_email, customer_phone, gst_number,
+				address_line1, address_line2, city, state, pincode, notes,
+				items_json, subtotal_inr, total_inr, status, created_at, updated_at
+			) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+		)
+		.bind(
+			order.orderId,
+			order.customerName,
+			order.customerEmail,
+			order.customerPhone,
+			order.gstNumber,
+			order.addressLine1,
+			order.addressLine2,
+			order.city,
+			order.state,
+			order.pincode,
+			order.notes,
+			JSON.stringify(order.items),
+			order.subtotal,
+			order.total,
+			'PENDING',
+			now,
+			now
+		)
+		.run();
+}
+
+export async function attachCashfreeOrderId(
+	env: GraycupOrdersEnv | undefined,
+	orderId: string,
+	cfOrderId: string
+): Promise<void> {
+	const db = requireDb(env);
+	await db
+		.prepare(`UPDATE indian_green_coffee_orders SET cashfree_order_id = ?, updated_at = ? WHERE order_id = ?`)
+		.bind(cfOrderId, nowUnixSeconds(), orderId)
+		.run();
+}
+
+export async function updateOrderStatusByOrderId(
+	env: GraycupOrdersEnv | undefined,
+	orderId: string,
+	status: 'PAID' | 'FAILED',
+	cfPaymentId: string | null
+): Promise<void> {
+	const db = requireDb(env);
+	await db
+		.prepare(
+			`UPDATE indian_green_coffee_orders
+			 SET status = ?, cashfree_payment_id = COALESCE(?, cashfree_payment_id), updated_at = ?
+			 WHERE order_id = ?`
+		)
+		.bind(status, cfPaymentId, nowUnixSeconds(), orderId)
+		.run();
+}
+
+export async function updateOrderStatusByCashfreeOrderId(
+	env: GraycupOrdersEnv | undefined,
+	cfOrderId: string,
+	status: 'PAID' | 'FAILED',
+	cfPaymentId: string | null
+): Promise<void> {
+	const db = requireDb(env);
+	await db
+		.prepare(
+			`UPDATE indian_green_coffee_orders
+			 SET status = ?, cashfree_payment_id = COALESCE(?, cashfree_payment_id), updated_at = ?
+			 WHERE cashfree_order_id = ?`
+		)
+		.bind(status, cfPaymentId, nowUnixSeconds(), cfOrderId)
+		.run();
+}
+
+export async function getOrderStatus(env: GraycupOrdersEnv | undefined, orderId: string): Promise<string | null> {
+	const db = requireDb(env);
+	const row = await db
+		.prepare(`SELECT status FROM indian_green_coffee_orders WHERE order_id = ?`)
+		.bind(orderId)
+		.first<{ status: string }>();
+	return row?.status ?? null;
 }

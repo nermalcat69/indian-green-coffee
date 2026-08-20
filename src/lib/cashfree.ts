@@ -1,7 +1,12 @@
 import crypto from 'node:crypto';
 
+// Read from process.env, not import.meta.env — Vite/Astro statically inlines
+// import.meta.env.X at build time, but these are runtime Cloudflare Worker
+// secrets (set via `wrangler secret put`). nodejs_compat_populate_process_env
+// (on by default for this project's compatibility_date) bridges Worker
+// vars/secrets into process.env at runtime, matching indian-roasted-coffee.
 function isSandbox(): boolean {
-	return (import.meta.env.CASHFREE_ENV ?? 'sandbox') === 'sandbox';
+	return (process.env.CASHFREE_ENV ?? 'sandbox') === 'sandbox';
 }
 
 function baseUrl(): string {
@@ -9,8 +14,8 @@ function baseUrl(): string {
 }
 
 function requireCredentials(): { appId: string; secretKey: string } {
-	const appId = import.meta.env.CASHFREE_APP_ID;
-	const secretKey = import.meta.env.CASHFREE_SECRET_KEY;
+	const appId = process.env.CASHFREE_APP_ID;
+	const secretKey = process.env.CASHFREE_SECRET_KEY;
 	if (!appId || !secretKey) {
 		throw new Error('CASHFREE_APP_ID or CASHFREE_SECRET_KEY is not set');
 	}

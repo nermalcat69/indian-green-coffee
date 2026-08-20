@@ -1,11 +1,10 @@
 import type { APIRoute } from 'astro';
-import { eq } from 'drizzle-orm';
-import { getDb, order } from '../../../lib/db';
+import { updateOrderStatusByCashfreeOrderId, type GraycupOrdersEnv } from '../../../lib/db';
 import { verifyCashfreeWebhookSignature } from '../../../lib/cashfree';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
 	const rawBody = await request.text();
 	const signature = request.headers.get('x-webhook-signature');
 	const timestamp = request.headers.get('x-webhook-timestamp');
@@ -49,9 +48,9 @@ export const POST: APIRoute = async ({ request }) => {
 
 	const paymentStatus =
 		payload.type === 'PAYMENT_SUCCESS_WEBHOOK' || paymentStatusRaw === 'SUCCESS'
-			? 'paid'
+			? 'PAID'
 			: payload.type === 'PAYMENT_FAILED_WEBHOOK' || paymentStatusRaw === 'FAILED'
-				? 'failed'
+				? 'FAILED'
 				: null;
 
 	if (!paymentStatus) {
@@ -60,15 +59,8 @@ export const POST: APIRoute = async ({ request }) => {
 	}
 
 	try {
-		const db = getDb();
-		await db
-			.update(order)
-			.set({
-				paymentStatus,
-				cashfreePaymentId: cfPaymentId ?? null,
-				updatedAt: new Date(),
-			})
-			.where(eq(order.cashfreeOrderId, cfOrderId));
+		const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
+		await updateOrderStatusByCashfreeOrderId(env, cfOrderId, paymentStatus, cfPaymentId ?? null);
 	} catch (err) {
 		console.error(err);
 		return new Response('Failed to update order', { status: 500 });

@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-import { eq } from 'drizzle-orm';
-import { getDb, order } from '../../lib/db';
+import { insertOrder, attachCashfreeOrderId, type GraycupOrdersEnv } from '../../lib/db';
 import { createCashfreeOrder } from '../../lib/cashfree';
 import { products } from '../../data/products';
 import { siteConfig } from '../../config/site';
@@ -30,7 +29,7 @@ function jsonError(message: string, status = 400) {
 	});
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
 	let body: CheckoutBody;
 	try {
 		body = await request.json();
@@ -93,62 +92,45 @@ export const POST: APIRoute = async ({ request }) => {
 	const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
 	const totalAmount = subtotal;
 
-	let db: ReturnType<typeof getDb>;
-	try {
-		db = getDb();
-	} catch (err) {
-		console.error(err);
-		return jsonError('Payment gateway is not configured yet', 500);
-	}
-
-	const addressSnapshot = {
-		name: name.trim(),
-		phone: phone.trim(),
-		email: email.trim(),
-		addressLine1: addressLine1.trim(),
-		addressLine2: addressLine2?.trim() || null,
-		city: city.trim(),
-		state: state.trim(),
-		pincode: pincode.trim(),
-		notes: notes?.trim() || null,
-	};
+	const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
+	const orderId = crypto.randomUUID();
 
 	try {
-		const [row] = await db
-			.insert(order)
-			.values({
-				addressSnapshot,
-				items: lineItems,
-				subtotal: subtotal.toFixed(2),
-				deliveryCharge: '0',
-				totalAmount: totalAmount.toFixed(2),
-				paymentStatus: 'pending',
-				gstNumber: gstNumber?.trim() || null,
-				customerName: name.trim(),
-				customerEmail: email.trim(),
-				customerPhone: phone.trim(),
-				notes: notes?.trim() || null,
-			})
-			.returning({ id: order.id });
+		await insertOrder(env, {
+			orderId,
+			customerName: name.trim(),
+			customerEmail: email.trim(),
+			customerPhone: phone.trim(),
+			gstNumber: gstNumber?.trim() || null,
+			addressLine1: addressLine1.trim(),
+			addressLine2: addressLine2?.trim() || null,
+			city: city.trim(),
+			state: state.trim(),
+			pincode: pincode.trim(),
+			notes: notes?.trim() || null,
+			items: lineItems,
+			subtotal,
+			total: totalAmount,
+		});
 
 		const phoneDigits = phone.replace(/\D/g, '').slice(-10);
 
 		const { cfOrderId, paymentSessionId } = await createCashfreeOrder({
-			orderId: row.id,
+			orderId,
 			amount: totalAmount,
 			customer: {
-				customerId: row.id,
+				customerId: orderId,
 				name: name.trim(),
 				email: email.trim(),
 				phone: phoneDigits,
 			},
-			returnUrl: `${siteConfig.siteUrl}/checkout/success?order_id=${row.id}`,
+			returnUrl: `${siteConfig.siteUrl}/checkout/success?order_id=${orderId}`,
 			notifyUrl: `${siteConfig.siteUrl}/api/cashfree/webhook`,
 		});
 
-		await db.update(order).set({ cashfreeOrderId: cfOrderId }).where(eq(order.id, row.id));
+		await attachCashfreeOrderId(env, orderId, cfOrderId);
 
-		return new Response(JSON.stringify({ orderId: row.id, paymentSessionId }), {
+		return new Response(JSON.stringify({ orderId, paymentSessionId }), {
 			status: 200,
 			headers: { 'content-type': 'application/json' },
 		});

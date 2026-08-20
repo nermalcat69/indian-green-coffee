@@ -7,5 +7,27 @@
 	"assets": {
 		"directory": "./dist",
 		"binding": "ASSETS"
-	}
+	},
+	"observability": {
+		"enabled": true
+	},
+
+	// Same D1 database orders-graycup reads its admin dashboard from (binding
+	// "DB" there). Orders are written directly here — this is the primary
+	// datastore for this site's orders, not just a mirror. See src/lib/db.ts
+	// and migrations/0001_create_indian_green_coffee_orders.sql.
+	"d1_databases": [
+		{
+			"binding": "GRAYCUP_ORDERS_DB",
+			"database_name": "graycup-orders",
+			"database_id": "c761625d-96b2-40a9-b1a3-4d9a58cae436"
+		}
+	]
+
+	// ─── Secrets ──────────────────────────────────────────────────────────────
+	// Do NOT put real values here — this file is committed. Set with
+	// `wrangler secret put <NAME>` (or Cloudflare dashboard → Workers →
+	// Settings → Variables) before deploying: CASHFREE_APP_ID,
+	// CASHFREE_SECRET_KEY, CASHFREE_ENV. For local `wrangler dev` / `astro dev`,
+	// put the same keys in a `.dev.vars` file (see .env.example).
 }
