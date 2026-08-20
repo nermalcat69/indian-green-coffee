@@ -1,0 +1,182 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+---
+
+<Layout
+	title="Contact Us | Indian Green Coffee"
+	description="Contact Gray Cup Enterprises Private Limited — office address, phone, and email for Indian Green Coffee."
+	showFooterCta={false}
+>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="legal-page">
+		<SiteHeader />
+
+		<main id="main-content" class="legal-main">
+			<header class="legal-header">
+				<h1>Contact Us</h1>
+				<p class="legal-intro">
+					Questions about an origin, a wholesale order, or anything else on this site — reach us
+					directly using the details below.
+				</p>
+			</header>
+
+			<article class="legal-content">
+				<section class="contact-grid">
+					<div class="contact-item">
+						<p class="contact-label">Company</p>
+						<p class="contact-value">Gray Cup Enterprises Private Limited</p>
+					</div>
+
+					<div class="contact-item">
+						<p class="contact-label">Registered office</p>
+						<p class="contact-value">
+							Harsha Bhawan, 4th Floor, 13/29 E-Block, Connaught Place,<br />
+							New Delhi – 110001, India
+						</p>
+					</div>
+
+					<div class="contact-item">
+						<p class="contact-label">Phone</p>
+						<p class="contact-value">
+							<a href="tel:+918527914317">+91 85279 14317</a>
+						</p>
+					</div>
+
+					<div class="contact-item">
+						<p class="contact-label">Email</p>
+						<p class="contact-value">
+							<a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
+						</p>
+					</div>
+				</section>
+
+				<section>
+					<h2>Order and wholesale enquiries</h2>
+					<p>
+						For quotes, samples, minimum order quantities, and shipping to your country, visit
+						<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
+						or email <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> directly. For
+						questions about an order already placed through this site, please include your order
+						reference in your email.
+					</p>
+				</section>
+			</article>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.legal-page {
+		width: min(calc(100% - 3rem), 62rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.legal-main {
+		padding: 5rem 0 0;
+	}
+
+	.legal-header {
+		max-width: 46rem;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(2.5rem, 4.2vw, 3.9rem);
+		line-height: 1.05;
+		letter-spacing: -0.05em;
+		font-weight: 800;
+	}
+
+	.legal-intro {
+		margin: 1.5rem 0 0;
+		font-size: 1.05rem;
+		line-height: 1.75;
+		color: var(--muted-foreground);
+	}
+
+	.legal-content {
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.legal-content section + section {
+		margin-top: 2.5rem;
+	}
+
+	.contact-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.75rem;
+	}
+
+	.contact-item {
+		padding: 1.35rem 1.5rem;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+	}
+
+	.contact-label {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	.contact-value {
+		margin: 0.6rem 0 0;
+		font-size: 1.05rem;
+		font-weight: 700;
+		line-height: 1.5;
+	}
+
+	.contact-value a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.contact-value a:hover {
+		text-decoration: underline;
+	}
+
+	h2 {
+		margin: 0 0 0.85rem;
+		font-size: 1.35rem;
+		line-height: 1.2;
+		letter-spacing: -0.03em;
+	}
+
+	.legal-content p {
+		margin: 0;
+		max-width: 46rem;
+		font-size: 1.05rem;
+		line-height: 1.75;
+	}
+
+	.legal-content a {
+		color: inherit;
+		font-weight: 700;
+	}
+
+	@media (max-width: 720px) {
+		.legal-page {
+			width: min(calc(100% - 1.5rem), 62rem);
+			padding-top: 1rem;
+		}
+
+		.legal-main {
+			padding-top: 4rem;
+		}
+
+		.contact-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

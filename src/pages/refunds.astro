@@ -1,0 +1,169 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+---
+
+<Layout
+	title="Refunds & Cancellations | Indian Green Coffee"
+	description="Refund and cancellation policy for wholesale green coffee orders placed on indiangreencoffee.com."
+	showFooterCta={false}
+	noindex={true}
+>
+	<a class="skip-link" href="#main-content">Skip to content</a>
+
+	<div class="legal-page">
+		<SiteHeader />
+
+		<main id="main-content" class="legal-main">
+			<header class="legal-header">
+				<h1>Refunds & Cancellations</h1>
+				<p class="legal-intro">
+					This policy covers order cancellations and refunds for wholesale green coffee orders
+					placed and paid for through this website.
+				</p>
+				<p class="legal-updated">Last updated: August 20, 2026</p>
+			</header>
+
+			<article class="legal-content">
+				<section>
+					<h2>Order cancellation</h2>
+					<p>
+						Because each order is a bulk, made-to-order green coffee lot, cancellation requests
+						are handled case by case. You can request a cancellation by emailing
+						<a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> with your order
+						reference as soon as possible after placing the order.
+					</p>
+					<p>
+						Orders can typically be cancelled free of charge if the lot has not yet been
+						allocated, graded, or dispatched. Once a lot has been prepared, packed, or handed to a
+						carrier, cancellation may no longer be possible, or may be subject to a deduction for
+						work already completed.
+					</p>
+				</section>
+
+				<section>
+					<h2>Payment failures</h2>
+					<p>
+						If a payment is deducted but the order does not confirm (for example, a failed or
+						interrupted Cashfree transaction), the amount is either automatically reversed by
+						Cashfree to your original payment method within their standard timelines, or refunded
+						by us within 7 business days of the failure being confirmed — whichever applies. Contact
+						us if you do not see the reversal within that window.
+					</p>
+				</section>
+
+				<section>
+					<h2>Quality or shipment issues</h2>
+					<p>
+						If a delivered lot does not match the agreed specification (grade, process, or
+						quantity), contact us within 7 days of delivery with your order reference and
+						photos/description of the issue. We will investigate and offer a resolution — which
+						may include a replacement, partial credit, or a refund — appropriate to the issue.
+					</p>
+				</section>
+
+				<section>
+					<h2>Refund method and timelines</h2>
+					<p>
+						Approved refunds are issued to the original payment method used at checkout via
+						Cashfree. Refunds are typically initiated within 7 business days of approval; the time
+						for funds to reflect in your account depends on your bank or card issuer, and can take
+						an additional 5–10 business days.
+					</p>
+				</section>
+
+				<section>
+					<h2>Contact</h2>
+					<p>
+						For any cancellation or refund request, email
+						<a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> or see our
+						<a href="/contact">contact details</a>.
+					</p>
+				</section>
+			</article>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.legal-page {
+		width: min(calc(100% - 3rem), 62rem);
+		margin: 0 auto;
+		padding: 1.25rem 0 5rem;
+	}
+
+	.legal-main {
+		padding: 5rem 0 0;
+	}
+
+	.legal-header {
+		max-width: 46rem;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(2.5rem, 4.2vw, 3.9rem);
+		line-height: 1.05;
+		letter-spacing: -0.05em;
+		font-weight: 800;
+	}
+
+	.legal-intro {
+		margin: 1.5rem 0 0;
+		font-size: 1.05rem;
+		line-height: 1.75;
+		color: var(--muted-foreground);
+	}
+
+	.legal-updated {
+		margin-top: 1.25rem;
+		font-size: 0.95rem;
+		line-height: 1.6;
+		color: var(--muted-foreground);
+	}
+
+	.legal-content {
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.legal-content section + section {
+		margin-top: 2.5rem;
+	}
+
+	h2 {
+		margin: 0 0 0.85rem;
+		font-size: 1.35rem;
+		line-height: 1.2;
+		letter-spacing: -0.03em;
+	}
+
+	.legal-content p {
+		margin: 0;
+		max-width: 46rem;
+		font-size: 1.05rem;
+		line-height: 1.75;
+	}
+
+	.legal-content p + p {
+		margin-top: 1rem;
+	}
+
+	.legal-content a {
+		color: inherit;
+		font-weight: 700;
+	}
+
+	@media (max-width: 720px) {
+		.legal-page {
+			width: min(calc(100% - 1.5rem), 62rem);
+			padding-top: 1rem;
+		}
+
+		.legal-main {
+			padding-top: 4rem;
+		}
+	}
+</style>

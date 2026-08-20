@@ -59,16 +59,20 @@ export const siteConfig: SiteConfig = {
 	],
 	extraPages: [
 		{ href: '/wholesale', label: 'Wholesale Sourcing' },
+		{ href: '/contact', label: 'Contact Us' },
 		{ href: '/site', label: 'Our Sites' },
 		{ href: '/cookies', label: 'Cookies' },
 		{ href: '/privacy', label: 'Privacy' },
-		{ href: '/terms', label: 'Terms' },
+		{ href: '/terms', label: 'Terms & Conditions' },
+		{ href: '/refunds', label: 'Refunds & Cancellations' },
 		{ href: '/404', label: '404' },
 	],
 	legalLinks: [
-		{ href: '/cookies', label: 'Cookies' },
+		{ href: '/contact', label: 'Contact Us' },
+		{ href: '/terms', label: 'Terms & Conditions' },
+		{ href: '/refunds', label: 'Refunds & Cancellations' },
 		{ href: '/privacy', label: 'Privacy' },
-		{ href: '/terms', label: 'Terms' },
+		{ href: '/cookies', label: 'Cookies' },
 	],
 	socialLinks: [
 		{ href: 'https://x.com/TheGrayCup', label: 'X' },
