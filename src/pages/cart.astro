@@ -1,13 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import { siteConfig } from '../config/site';
-
-const title = 'Cart | Indian Green Coffee';
-const description = 'Review your wholesale green coffee order before checkout.';
 ---
 
-<Layout title={title} description={description} noindex={true}>
+<Layout title="Cart | Indian Green Coffee" description="Review your wholesale green coffee order before checkout." noindex={true}>
 	<a class="skip-link" href="#main-content">Skip to content</a>
 
 	<div class="page">
@@ -25,19 +21,23 @@ const description = 'Review your wholesale green coffee order before checkout.';
 				</p>
 			</div>
 
-			<div data-cart-list class="cart-list"></div>
+			<div class="cart-layout" data-cart-layout hidden>
+				<div data-cart-list class="cart-list"></div>
 
-			<section data-cart-summary class="cart-summary" hidden>
-				<div class="summary-row summary-total">
-					<span>Subtotal</span>
-					<span data-cart-subtotal>₹0</span>
-				</div>
-				<p class="summary-note">
-					Prices are indicative FOB India rates in INR per kg. Freight, duties, and export
-					documentation are arranged separately after checkout.
-				</p>
-				<a class="checkout-button" href="/checkout">Proceed to checkout</a>
-			</section>
+				<aside class="cart-summary accent-card lime">
+					<h2>Order summary</h2>
+					<div data-cart-summary-items></div>
+					<div class="summary-row">
+						<span>Subtotal</span>
+						<span data-cart-subtotal>₹0</span>
+					</div>
+					<p class="summary-note">
+						Prices are indicative FOB India rates in INR per kg. Freight, duties, and export
+						documentation are arranged separately after checkout.
+					</p>
+					<a class="checkout-button" href="/checkout">Continue to checkout</a>
+				</aside>
+			</div>
 		</main>
 	</div>
 </Layout>
@@ -46,9 +46,10 @@ const description = 'Review your wholesale green coffee order before checkout.';
 	import { getCart, removeItem, updateQty } from '../lib/cart';
 	import { products } from '../data/products';
 
+	const layoutEl = document.querySelector<HTMLElement>('[data-cart-layout]')!;
 	const listEl = document.querySelector<HTMLElement>('[data-cart-list]')!;
 	const emptyEl = document.querySelector<HTMLElement>('[data-cart-empty]')!;
-	const summaryEl = document.querySelector<HTMLElement>('[data-cart-summary]')!;
+	const summaryItemsEl = document.querySelector<HTMLElement>('[data-cart-summary-items]')!;
 	const subtotalEl = document.querySelector<HTMLElement>('[data-cart-subtotal]')!;
 
 	function fmt(n: number) {
@@ -60,46 +61,62 @@ const description = 'Review your wholesale green coffee order before checkout.';
 
 		if (items.length === 0) {
 			emptyEl.hidden = false;
-			summaryEl.hidden = true;
+			layoutEl.hidden = true;
 			listEl.innerHTML = '';
+			summaryItemsEl.innerHTML = '';
 			return;
 		}
 
 		emptyEl.hidden = true;
-		summaryEl.hidden = false;
+		layoutEl.hidden = false;
 
 		let subtotal = 0;
-		listEl.innerHTML = items
-			.map((item) => {
-				const product = products.find((p) => p.slug === item.slug);
-				if (!product) return '';
-				const lineTotal = Math.round(product.priceRange.min * item.qtyKg);
-				subtotal += lineTotal;
-				return `
-					<article class="cart-item">
-						<div class="cart-item-info">
-							<p class="cart-item-name"><a href="/products/${product.slug}">${product.name}</a></p>
-							<p class="cart-item-price">₹${product.priceRange.min}/kg · min ${product.minimumOrder.quantity}${product.minimumOrder.unit}</p>
-						</div>
-						<div class="cart-item-controls">
-							<label class="qty-label" for="qty-${product.slug}">Qty (kg)</label>
-							<input
-								id="qty-${product.slug}"
-								type="number"
-								min="${product.minimumOrder.quantity}"
-								step="1"
-								value="${item.qtyKg}"
-								data-qty-input
-								data-slug="${product.slug}"
-							/>
-							<p class="cart-item-total">${fmt(lineTotal)}</p>
-							<button type="button" data-remove data-slug="${product.slug}" aria-label="Remove ${product.name}">Remove</button>
-						</div>
-					</article>
-				`;
-			})
-			.join('');
+		const rows: string[] = [];
+		const summaryRows: string[] = [];
 
+		for (const item of items) {
+			const product = products.find((p) => p.slug === item.slug);
+			if (!product) continue;
+			const lineTotal = Math.round(product.priceRange.min * item.qtyKg);
+			subtotal += lineTotal;
+
+			rows.push(`
+				<article class="cart-item">
+					<a class="cart-item-image-link" href="/products/${product.slug}">
+						<img class="cart-item-image" src="${product.image.src}" alt="${product.imageAlt}" width="${product.image.width}" height="${product.image.height}" loading="lazy" />
+					</a>
+					<div class="cart-item-info">
+						<p class="cart-item-name"><a href="/products/${product.slug}">${product.name}</a></p>
+						<p class="cart-item-meta">${product.process}</p>
+						<p class="cart-item-price">₹${product.priceRange.min}/kg · min ${product.minimumOrder.quantity}${product.minimumOrder.unit}</p>
+					</div>
+					<div class="cart-item-controls">
+						<label class="qty-label" for="qty-${product.slug}">Qty (kg)</label>
+						<input
+							id="qty-${product.slug}"
+							type="number"
+							min="${product.minimumOrder.quantity}"
+							step="1"
+							value="${item.qtyKg}"
+							data-qty-input
+							data-slug="${product.slug}"
+						/>
+						<p class="cart-item-total">${fmt(lineTotal)}</p>
+						<button type="button" data-remove data-slug="${product.slug}" aria-label="Remove ${product.name}">Remove</button>
+					</div>
+				</article>
+			`);
+
+			summaryRows.push(`
+				<div class="summary-line">
+					<span>${product.name} × ${item.qtyKg}kg</span>
+					<span>${fmt(lineTotal)}</span>
+				</div>
+			`);
+		}
+
+		listEl.innerHTML = rows.join('');
+		summaryItemsEl.innerHTML = summaryRows.join('');
 		subtotalEl.textContent = fmt(subtotal);
 	}
 
@@ -133,7 +150,7 @@ const description = 'Review your wholesale green coffee order before checkout.';
 <style>
 	.page {
 		position: relative;
-		width: min(calc(100% - 3rem), 60rem);
+		width: min(calc(100% - 3rem), 72rem);
 		margin: 0 auto;
 		padding: 1.25rem 0 5rem;
 	}
@@ -161,20 +178,42 @@ const description = 'Review your wholesale green coffee order before checkout.';
 		color: var(--accent-link);
 	}
 
+	.cart-layout {
+		display: grid;
+		grid-template-columns: 1.5fr 1fr;
+		gap: 2.5rem;
+		align-items: start;
+	}
+
 	.cart-list {
 		display: grid;
 		gap: 1rem;
 	}
 
 	.cart-item {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: 6rem 1fr auto;
+		gap: 1.25rem;
 		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 1.25rem;
+		padding: 1rem;
 		border: 1px solid var(--border);
 		border-radius: 1rem;
+	}
+
+	.cart-item-image-link {
+		display: block;
+		width: 6rem;
+		height: 6rem;
+		border-radius: 0.75rem;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.cart-item-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
 	}
 
 	.cart-item-name {
@@ -188,21 +227,29 @@ const description = 'Review your wholesale green coffee order before checkout.';
 		color: inherit;
 	}
 
+	.cart-item-meta {
+		margin: 0.3rem 0 0;
+		font-size: 0.85rem;
+		color: var(--muted-foreground);
+	}
+
 	.cart-item-price {
-		margin: 0.35rem 0 0;
-		font-size: 0.9rem;
+		margin: 0.3rem 0 0;
+		font-size: 0.88rem;
 		color: var(--muted-foreground);
 	}
 
 	.cart-item-controls {
 		display: flex;
-		align-items: center;
-		gap: 0.75rem;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.5rem;
 	}
 
 	.qty-label {
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		color: var(--muted-foreground);
+		align-self: flex-end;
 	}
 
 	.cart-item-controls input[type='number'] {
@@ -226,6 +273,7 @@ const description = 'Review your wholesale green coffee order before checkout.';
 		cursor: pointer;
 		font-weight: 600;
 		font-size: 0.85rem;
+		background: transparent;
 	}
 
 	.cart-item-controls button:hover {
@@ -233,36 +281,77 @@ const description = 'Review your wholesale green coffee order before checkout.';
 	}
 
 	.cart-summary {
-		margin-top: 2rem;
-		padding-top: 2rem;
-		border-top: 1px solid var(--border);
+		position: sticky;
+		top: 2rem;
+		padding: 1.75rem;
+	}
+
+	.cart-summary h2 {
+		margin: 0 0 1rem;
+		font-size: 1.15rem;
+		font-weight: 800;
+	}
+
+	.summary-line {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		font-size: 0.9rem;
+		border-bottom: 1px solid rgba(23, 23, 23, 0.14);
 	}
 
 	.summary-row {
 		display: flex;
 		justify-content: space-between;
-		font-size: 1.2rem;
+		margin-top: 1rem;
+		padding-top: 1rem;
+		font-size: 1.15rem;
 		font-weight: 800;
+		border-top: 1px solid rgba(23, 23, 23, 0.24);
 	}
 
 	.summary-note {
-		margin: 0.85rem 0 0;
-		font-size: 0.9rem;
-		color: var(--muted-foreground);
+		margin: 1rem 0 0;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		opacity: 0.75;
 	}
 
 	.checkout-button {
-		display: inline-block;
+		display: block;
 		margin-top: 1.5rem;
-		padding: 0.9rem 1.6rem;
-		background: var(--foreground);
-		color: var(--background);
+		padding: 0.95rem 1.6rem;
+		background: #171717;
+		color: #fff;
 		border-radius: 999px;
 		font-weight: 700;
+		text-align: center;
 		text-decoration: none;
 	}
 
 	.checkout-button:hover {
 		opacity: 0.85;
+	}
+
+	@media (max-width: 820px) {
+		.cart-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.cart-item {
+			grid-template-columns: 4.5rem 1fr;
+		}
+
+		.cart-item-controls {
+			grid-column: 1 / -1;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.cart-summary {
+			position: static;
+		}
 	}
 </style>

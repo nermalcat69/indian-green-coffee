@@ -19,6 +19,17 @@ const pageUrl = `${siteConfig.siteUrl}/products/${product.slug}`;
 const title = `${product.name} | Indian Green Coffee`;
 const description = `${product.summary} ${product.process}, ${product.varietal}. ₹${product.priceRange.min}-${product.priceRange.max}${product.priceRange.unit} FOB India. MOQ ${product.minimumOrder.quantity}${product.minimumOrder.unit}.`;
 
+const specs: Array<[string, string]> = [
+	['Variety', product.variety],
+	['Process', product.process],
+	['Grade', product.grade],
+	['Varietal', product.varietal],
+	...(product.scaScore != null ? ([['SCA Score', String(product.scaScore)]] as Array<[string, string]>) : []),
+	['Price (FOB India)', `₹${product.priceRange.min}–${product.priceRange.max}${product.priceRange.unit}`],
+	['Minimum order', `${product.minimumOrder.quantity}${product.minimumOrder.unit}`],
+	['SKU', product.sku],
+];
+
 const schema = [
 	{
 		'@context': 'https://schema.org',
@@ -87,86 +98,91 @@ const schema = [
 				<span aria-current="page">{product.name}</span>
 			</nav>
 
-			<header class="hero">
-				<p class="eyebrow">
-					<a href={`/origins/${origin.slug}`}>{origin.name}, {origin.state}</a>
-				</p>
-				<h1 class="display-title">{product.name}</h1>
-				<p class="hero-text">{product.description}</p>
-			</header>
-
-			<figure class="hero-image">
-				<Image
-					src={product.image}
-					alt={product.imageAlt}
-					loading="eager"
-					decoding="async"
-					widths={[480, 720, 1040]}
-					sizes="(max-width: 900px) 100vw, 46rem"
-				/>
-			</figure>
-
-			<section class="spec-grid" aria-label="Product specification">
-				<div class="spec">
-					<p class="spec-label">Variety</p>
-					<p class="spec-value">{product.variety}</p>
-				</div>
-				<div class="spec">
-					<p class="spec-label">Process</p>
-					<p class="spec-value">{product.process}</p>
-				</div>
-				<div class="spec">
-					<p class="spec-label">Grade</p>
-					<p class="spec-value">{product.grade}</p>
-				</div>
-				<div class="spec">
-					<p class="spec-label">Varietal</p>
-					<p class="spec-value">{product.varietal}</p>
-				</div>
-				{
-					product.scaScore != null && (
-						<div class="spec">
-							<p class="spec-label">SCA Score</p>
-							<p class="spec-value">{product.scaScore}</p>
-						</div>
-					)
-				}
-				<div class="spec">
-					<p class="spec-label">Price (FOB India)</p>
-					<p class="spec-value">₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}</p>
-				</div>
-				<div class="spec">
-					<p class="spec-label">Minimum order</p>
-					<p class="spec-value">{product.minimumOrder.quantity}{product.minimumOrder.unit}</p>
-				</div>
-				<div class="spec">
-					<p class="spec-label">SKU</p>
-					<p class="spec-value">{product.sku}</p>
-				</div>
-			</section>
-
-			<section class="cta add-to-cart" data-product-slug={product.slug} data-min-qty={product.minimumOrder.quantity}>
-				<h2>Order {product.name}</h2>
-				<div class="add-to-cart-row">
-					<label for="qty">
-						Quantity ({product.minimumOrder.unit}) — min {product.minimumOrder.quantity}
-					</label>
-					<input
-						id="qty"
-						type="number"
-						min={product.minimumOrder.quantity}
-						step="1"
-						value={product.minimumOrder.quantity}
-						data-qty-input
+			<div class="product-layout">
+				<figure class="hero-image">
+					<Image
+						src={product.image}
+						alt={product.imageAlt}
+						loading="eager"
+						decoding="async"
+						widths={[480, 720, 1040]}
+						sizes="(max-width: 900px) 100vw, 32rem"
 					/>
-					<button type="button" data-add-to-cart>Add to cart</button>
+				</figure>
+
+				<div class="buy-column">
+					<div class={`info-panel accent-card ${product.accent}`}>
+						<p class="info-origin">
+							<a href={`/origins/${origin.slug}`}>{origin.name}, {origin.state}</a>
+						</p>
+						<h1 class="info-title">{product.name}</h1>
+						<p class="info-summary">{product.summary}</p>
+						<p class="info-price">
+							₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}
+							<span class="info-moq">min {product.minimumOrder.quantity}{product.minimumOrder.unit}</span>
+						</p>
+					</div>
+
+					<table class="spec-table">
+						<tbody>
+							{
+								specs.map(([label, value]) => (
+									<tr>
+										<th scope="row">{label}</th>
+										<td>{value}</td>
+									</tr>
+								))
+							}
+						</tbody>
+					</table>
+
+					<section
+						class="buy-box"
+						data-product-card
+						data-slug={product.slug}
+						data-name={product.name}
+						data-price={product.priceRange.min}
+						data-min-qty={product.minimumOrder.quantity}
+					>
+						<div class="qty-row">
+							<span class="qty-label">Quantity ({product.minimumOrder.unit})</span>
+							<div class="qty-stepper">
+								<button type="button" class="qty-btn" data-qty-dec aria-label={`Decrease quantity for ${product.name}`}>−</button>
+								<input
+									type="number"
+									class="qty-value"
+									data-qty-input
+									min={product.minimumOrder.quantity}
+									step={product.minimumOrder.quantity <= 10 ? 1 : 10}
+									value={product.minimumOrder.quantity}
+									aria-label={`Quantity in kg for ${product.name}`}
+								/>
+								<button type="button" class="qty-btn" data-qty-inc aria-label={`Increase quantity for ${product.name}`}>+</button>
+							</div>
+						</div>
+
+						<div class="buy-box-actions">
+							<button type="button" class="btn-buy-now" data-buy-now>
+								Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min * product.minimumOrder.quantity).toLocaleString('en-IN')}</span>
+							</button>
+							<button type="button" class="btn-add-cart" data-add-to-cart>
+								Add to cart
+							</button>
+						</div>
+						<p class="buy-box-note" data-add-to-cart-note hidden></p>
+					</section>
+
+					<p class="alt-contact">
+						For samples, custom quotes, or shipping to your country, you can also reach us at
+						<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
+						or <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
+					</p>
 				</div>
-				<p class="add-to-cart-note" data-add-to-cart-note hidden></p>
-				<p class="alt-contact">
-					For samples, custom quotes, or shipping to your country, you can also reach us at
-					<a href="https://bulkgreencoffee.com" target="_blank" rel="noopener noreferrer">bulkgreencoffee.com</a>
-					or <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
-				</p>
+			</div>
+
+			<section class="description-section">
+				<h2>About this lot</h2>
+				<p>{product.description}</p>
 			</section>
 		</main>
 	</div>
@@ -175,20 +191,58 @@ const schema = [
 <script>
 	import { addItem } from '../../lib/cart';
 
-	document.querySelectorAll<HTMLElement>('.add-to-cart').forEach((section) => {
-		const slug = section.dataset.productSlug;
-		const minQty = Number(section.dataset.minQty ?? '1');
-		const input = section.querySelector<HTMLInputElement>('[data-qty-input]');
-		const button = section.querySelector<HTMLButtonElement>('[data-add-to-cart]');
-		const note = section.querySelector<HTMLElement>('[data-add-to-cart-note]');
-		if (!slug || !input || !button || !note) return;
+	function fmt(n: number) {
+		return `₹${Math.round(n).toLocaleString('en-IN')}`;
+	}
 
-		button.addEventListener('click', () => {
-			const qty = Math.max(Number(input.value) || 0, minQty);
-			input.value = String(qty);
+	document.querySelectorAll<HTMLElement>('[data-product-card]').forEach((card) => {
+		const slug = card.dataset.slug;
+		const pricePerKg = Number(card.dataset.price ?? 0);
+		const minQty = Number(card.dataset.minQty ?? 1);
+		const qtyInput = card.querySelector<HTMLInputElement>('[data-qty-input]');
+		const decBtn = card.querySelector<HTMLButtonElement>('[data-qty-dec]');
+		const incBtn = card.querySelector<HTMLButtonElement>('[data-qty-inc]');
+		const buyNowTotal = card.querySelector<HTMLElement>('[data-buy-now-total]');
+		const addBtn = card.querySelector<HTMLButtonElement>('[data-add-to-cart]');
+		const buyBtn = card.querySelector<HTMLButtonElement>('[data-buy-now]');
+		const note = card.querySelector<HTMLElement>('[data-add-to-cart-note]');
+		if (!slug || !qtyInput) return;
+
+		const step = Number(qtyInput.step) || 1;
+
+		function currentQty(): number {
+			return Math.max(Number(qtyInput!.value) || 0, minQty);
+		}
+
+		function syncTotal() {
+			if (buyNowTotal) buyNowTotal.textContent = fmt(pricePerKg * currentQty());
+		}
+
+		function setQty(next: number) {
+			const clamped = Math.max(minQty, next);
+			qtyInput!.value = String(clamped);
+			syncTotal();
+		}
+
+		decBtn?.addEventListener('click', () => setQty(currentQty() - step));
+		incBtn?.addEventListener('click', () => setQty(currentQty() + step));
+		qtyInput.addEventListener('change', () => setQty(currentQty()));
+
+		addBtn?.addEventListener('click', () => {
+			const qty = currentQty();
 			addItem(slug, qty);
-			note.hidden = false;
-			note.textContent = `${qty}kg added to cart.`;
+			if (note) {
+				note.hidden = false;
+				note.textContent = `${qty}kg added to cart.`;
+				window.setTimeout(() => {
+					note.hidden = true;
+				}, 2500);
+			}
+		});
+
+		buyBtn?.addEventListener('click', () => {
+			addItem(slug, currentQty());
+			window.location.href = '/checkout';
 		});
 	});
 </script>
@@ -220,34 +274,18 @@ const schema = [
 		text-decoration: underline;
 	}
 
-	.hero {
-		padding: 2rem 0 3rem;
-		max-width: 46rem;
-	}
-
-	.eyebrow {
-		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 0.82rem;
-		font-weight: 600;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--muted-foreground);
-	}
-
-	.eyebrow a {
-		color: inherit;
-	}
-
-	.hero-text {
-		margin: 1.5rem 0 0;
-		font-size: 1.1rem;
-		line-height: 1.65;
+	.product-layout {
+		display: grid;
+		grid-template-columns: 1.1fr 1fr;
+		gap: 3rem;
+		align-items: start;
+		margin-top: 2rem;
 	}
 
 	.hero-image {
-		margin: 2rem 0 0;
-		max-width: 32rem;
+		position: sticky;
+		top: 2rem;
+		margin: 0;
 	}
 
 	.hero-image :global(img) {
@@ -258,99 +296,238 @@ const schema = [
 		box-shadow: var(--shadow-soft);
 	}
 
-	.spec-grid {
+	.buy-column {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
 		gap: 1.5rem;
-		padding: 2.5rem 0;
-		border-top: 1px solid var(--border);
 	}
 
-	.spec-label {
+	.info-panel {
+		padding: 1.75rem;
+	}
+
+	.info-origin {
 		margin: 0;
+		font-family: var(--font-mono);
 		font-size: 0.8rem;
 		font-weight: 600;
-		text-transform: uppercase;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		opacity: 0.72;
+	}
+
+	.info-origin a {
+		color: inherit;
+	}
+
+	.info-title {
+		margin: 0.6rem 0 0;
+		font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		line-height: 1.15;
+	}
+
+	.info-summary {
+		margin: 0.85rem 0 0;
+		font-size: 1rem;
+		line-height: 1.55;
+	}
+
+	.info-price {
+		margin: 1.1rem 0 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+		font-size: 1.3rem;
+		font-weight: 800;
+	}
+
+	.info-moq {
+		font-size: 0.8rem;
+		font-weight: 600;
+		opacity: 0.68;
+	}
+
+	.spec-table {
+		width: 100%;
+		border-collapse: collapse;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
+		overflow: hidden;
+		font-size: 0.92rem;
+	}
+
+	.spec-table tr:not(:last-child) th,
+	.spec-table tr:not(:last-child) td {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.spec-table th,
+	.spec-table td {
+		padding: 0.75rem 1rem;
+		text-align: left;
+	}
+
+	.spec-table th {
+		width: 45%;
+		font-weight: 600;
 		color: var(--muted-foreground);
 	}
 
-	.spec-value {
-		margin: 0.4rem 0 0;
-		font-size: 1.05rem;
+	.spec-table td {
 		font-weight: 700;
 	}
 
-	.cta {
-		padding: 2.5rem 0 1rem;
-		border-top: 1px solid var(--border);
+	.buy-box {
+		padding: 1.5rem;
+		border: 1px solid var(--border);
+		border-radius: 1rem;
 	}
 
-	.cta h2 {
-		margin: 0;
-		font-size: clamp(1.3rem, 1.8vw, 1.6rem);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-	}
-
-	.cta p {
-		margin: 0.75rem 0 0;
-		font-size: 1.02rem;
-		line-height: 1.6;
-		color: var(--muted-foreground);
-	}
-
-	.cta a {
-		color: var(--accent-link);
-	}
-
-	.add-to-cart-row {
+	.qty-row {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: end;
+		align-items: center;
+		justify-content: space-between;
 		gap: 1rem;
-		margin-top: 1.25rem;
+		flex-wrap: wrap;
 	}
 
-	.add-to-cart-row label {
-		display: block;
-		margin-bottom: 0.4rem;
+	.qty-label {
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--muted-foreground);
 	}
 
-	.add-to-cart-row input {
-		width: 7rem;
-		padding: 0.7rem 0.85rem;
+	.qty-stepper {
+		display: inline-flex;
+		align-items: center;
 		border: 1px solid var(--control-border);
-		border-radius: 0.65rem;
-		font-size: 0.95rem;
+		border-radius: 0.75rem;
+		overflow: hidden;
 	}
 
-	.add-to-cart-row button {
-		padding: 0.85rem 1.5rem;
-		background: var(--foreground);
-		color: var(--background);
-		border-radius: 999px;
+	.qty-btn {
+		width: 2.6rem;
+		height: 2.6rem;
+		display: grid;
+		place-items: center;
+		background: transparent;
+		border: none;
+		font-size: 1.2rem;
 		font-weight: 700;
+		color: inherit;
 		cursor: pointer;
 	}
 
-	.add-to-cart-row button:hover {
+	.qty-btn:hover {
+		background: var(--muted);
+	}
+
+	.qty-value {
+		width: 4rem;
+		text-align: center;
+		border: none;
+		border-left: 1px solid var(--control-border);
+		border-right: 1px solid var(--control-border);
+		background: transparent;
+		font-size: 1rem;
+		font-weight: 800;
+		color: inherit;
+		padding: 0.6rem 0;
+		-moz-appearance: textfield;
+	}
+
+	.qty-value::-webkit-outer-spin-button,
+	.qty-value::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	.buy-box-actions {
+		display: grid;
+		gap: 0.75rem;
+		margin-top: 1.25rem;
+	}
+
+	.btn-buy-now,
+	.btn-add-cart {
+		padding: 0.9rem 1.5rem;
+		border-radius: 999px;
+		font-weight: 700;
+		font-size: 0.98rem;
+		cursor: pointer;
+		text-align: center;
+	}
+
+	.btn-buy-now {
+		background: var(--foreground);
+		color: var(--background);
+		border: 1px solid var(--foreground);
+	}
+
+	.btn-buy-now:hover {
 		opacity: 0.85;
 	}
 
-	.add-to-cart-note {
-		margin: 0.85rem 0 0;
-		font-size: 0.9rem;
-		font-weight: 600;
+	.btn-add-cart {
+		background: transparent;
+		color: inherit;
+		border: 1px solid var(--control-border);
+	}
+
+	.btn-add-cart:hover {
+		background: var(--muted);
+	}
+
+	.buy-box-note {
+		margin: 0.9rem 0 0;
+		font-size: 0.88rem;
+		font-weight: 700;
+		text-align: center;
 	}
 
 	.alt-contact {
-		margin: 1.5rem 0 0;
+		margin: 0;
 		font-size: 0.92rem;
+		line-height: 1.6;
 		color: var(--muted-foreground);
+	}
+
+	.alt-contact a {
+		color: var(--accent-link);
+	}
+
+	.description-section {
+		max-width: 46rem;
+		margin-top: 4rem;
+		padding-top: 2.5rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.description-section h2 {
+		margin: 0 0 0.85rem;
+		font-size: 1.35rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.description-section p {
+		margin: 0;
+		font-size: 1.02rem;
+		line-height: 1.7;
+		color: var(--muted-foreground);
+	}
+
+	@media (max-width: 900px) {
+		.product-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.hero-image {
+			position: static;
+			max-width: 32rem;
+		}
 	}
 
 	@media (max-width: 720px) {

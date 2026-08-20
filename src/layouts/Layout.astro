@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import SiteFooter from '../components/SiteFooter.astro';
+import WhatsappWidget from '../components/WhatsappWidget.astro';
 import { siteConfig } from '../config/site';
 
 const {
@@ -92,6 +93,7 @@ const schemaData =
 	<body>
 		<slot />
 		<SiteFooter showCta={showFooterCta} />
+		<WhatsappWidget />
 		<script src="/cookie-consent.js" defer></script>
 	</body>
 </html>
