@@ -117,5 +117,10 @@ export const siteConfig: SiteConfig = {
 			description:
 				'Single-origin Indian coffee, roasted to order and shipped within 48 hours — from Coorg to Koraput.',
 		},
+		{
+			href: 'https://enterprised.app',
+			label: 'Enterprised',
+			description: 'A functional website builder, powered by AI.',
+		},
 	],
 };
