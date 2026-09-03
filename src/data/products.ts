@@ -216,6 +216,24 @@ export const products: Product[] = [
 		image: coorgImage,
 		imageAlt: 'A bowl of raw green coffee beans from Coorg (Kodagu), Karnataka',
 	},
+	{
+		slug: 'attikan-washed-aaa',
+		name: 'Attikan Estate AAA Washed Arabica',
+		originSlug: 'chikmagalur-bababudangiri',
+		variety: 'Arabica',
+		process: 'Fully washed',
+		grade: 'AAA',
+		varietal: 'S795, Selection 9, Cauvery',
+		priceRange: { min: 1100, max: 1400, unit: '/kg' },
+		minimumOrder: { quantity: 20, unit: 'kg' },
+		accent: 'lavender',
+		summary: 'Washed AAA-screen Arabica green coffee from Attikan Estate, Chikmagalur — clean and bright, priced from ₹1,400/kg at 1 kg down to ₹1,100/kg at 20 kg.',
+		description:
+			'Fully de-pulped and sun-dried without residual mucilage on raised beds at Attikan Estate in the Mudigere hills of Chikmagalur, then screened to a large, even AAA bean size. Tiered per-kg pricing: ₹1,400/kg at 1 kg, ₹1,350/kg at 5 kg, ₹1,250/kg at 10 kg, ₹1,200/kg at 15 kg, ₹1,100/kg at 20 kg.',
+		sku: 'IGC-ATK-WSH-AAA',
+		image: chikmagalurImage,
+		imageAlt: 'A bowl of raw green coffee beans from Attikan Estate, Chikmagalur',
+	},
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {
