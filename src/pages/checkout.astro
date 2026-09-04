@@ -61,7 +61,7 @@ const description = 'Complete your wholesale green coffee order.';
 						</div>
 						<div class="field">
 							<label for="pincode">Pincode</label>
-							<input id="pincode" name="pincode" type="text" required />
+							<input id="pincode" name="pincode" type="text" inputmode="numeric" pattern="[1-9][0-9]{5}" maxlength="6" placeholder="6-digit PIN code" required />
 						</div>
 					</div>
 					<div class="field">
@@ -137,6 +137,17 @@ const description = 'Complete your wholesale green coffee order.';
 		submitButton.textContent = 'Processing…';
 
 		const formData = new FormData(form);
+
+		// Indian PIN codes are exactly 6 digits, first digit 1-9.
+		const pincodeValue = String(formData.get('pincode') ?? '').trim();
+		if (!/^[1-9][0-9]{5}$/.test(pincodeValue)) {
+			errorEl.textContent = 'Enter a valid 6-digit PIN code';
+			errorEl.hidden = false;
+			submitButton.disabled = false;
+			submitButton.textContent = 'Pay with Cashfree';
+			return;
+		}
+
 		const body = {
 			name: String(formData.get('name') ?? ''),
 			phone: String(formData.get('phone') ?? ''),

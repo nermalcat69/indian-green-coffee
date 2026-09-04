@@ -57,6 +57,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	if (!addressLine1?.trim() || !city?.trim() || !state?.trim() || !pincode?.trim()) {
 		return jsonError('Address, city, state, and pincode are required');
 	}
+	// Indian PIN codes are exactly 6 digits, first digit 1-9.
+	if (!/^[1-9][0-9]{5}$/.test(pincode.trim())) {
+		return jsonError('Enter a valid 6-digit PIN code');
+	}
 	if (!Array.isArray(items) || items.length === 0) {
 		return jsonError('At least one product is required');
 	}
