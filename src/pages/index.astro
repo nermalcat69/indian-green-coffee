@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import { origins, getOriginBySlug } from '../data/origins';
-import { products } from '../data/products';
+import { products, WEIGHT_OPTIONS } from '../data/products';
 import { siteConfig } from '../config/site';
 
 const schema = [
@@ -68,7 +68,6 @@ const schema = [
 									data-slug={product.slug}
 									data-name={product.name}
 									data-price={product.priceRange.min}
-									data-min-qty={product.minimumOrder.quantity}
 								>
 									<a class="product-card-image-link" href={`/products/${product.slug}`}>
 										<Image
@@ -93,29 +92,24 @@ const schema = [
 										</p>
 										<p class="product-card-price">
 											₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}
-											<span class="product-card-moq">min {product.minimumOrder.quantity}{product.minimumOrder.unit}</span>
 										</p>
 
 										<div class="product-card-qty">
-											<span class="product-card-qty-label">Qty (kg)</span>
-											<div class="qty-stepper">
-												<button type="button" class="qty-btn" data-qty-dec aria-label={`Decrease quantity for ${product.name}`}>−</button>
-												<input
-													type="number"
-													class="qty-value"
-													data-qty-input
-													min={product.minimumOrder.quantity}
-													step={product.minimumOrder.quantity <= 10 ? 1 : 10}
-													value={product.minimumOrder.quantity}
-													aria-label={`Quantity in kg for ${product.name}`}
-												/>
-												<button type="button" class="qty-btn" data-qty-inc aria-label={`Increase quantity for ${product.name}`}>+</button>
-											</div>
+											<span class="product-card-qty-label">Pack size</span>
+											<select class="qty-select" data-qty-select aria-label={`Pack size for ${product.name}`}>
+												{
+													WEIGHT_OPTIONS.map((option) => (
+														<option value={option.kg} selected={option.kg === 1}>
+															{option.label}
+														</option>
+													))
+												}
+											</select>
 										</div>
 
 										<div class="product-card-actions">
 											<button type="button" class="btn-buy-now" data-buy-now>
-												Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min * product.minimumOrder.quantity).toLocaleString('en-IN')}</span>
+												Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min).toLocaleString('en-IN')}</span>
 											</button>
 											<button type="button" class="btn-add-cart" data-add-to-cart>
 												Add to cart
@@ -161,42 +155,29 @@ const schema = [
 	document.querySelectorAll<HTMLElement>('[data-product-card]').forEach((card) => {
 		const slug = card.dataset.slug;
 		const pricePerKg = Number(card.dataset.price ?? 0);
-		const minQty = Number(card.dataset.minQty ?? 1);
-		const qtyInput = card.querySelector<HTMLInputElement>('[data-qty-input]');
-		const decBtn = card.querySelector<HTMLButtonElement>('[data-qty-dec]');
-		const incBtn = card.querySelector<HTMLButtonElement>('[data-qty-inc]');
+		const qtySelect = card.querySelector<HTMLSelectElement>('[data-qty-select]');
 		const buyNowTotal = card.querySelector<HTMLElement>('[data-buy-now-total]');
 		const addBtn = card.querySelector<HTMLButtonElement>('[data-add-to-cart]');
 		const buyBtn = card.querySelector<HTMLButtonElement>('[data-buy-now]');
 		const note = card.querySelector<HTMLElement>('[data-add-to-cart-note]');
-		if (!slug || !qtyInput) return;
-
-		const step = Number(qtyInput.step) || 1;
+		if (!slug || !qtySelect) return;
 
 		function currentQty(): number {
-			return Math.max(Number(qtyInput!.value) || 0, minQty);
+			return Number(qtySelect!.value) || 1;
 		}
 
 		function syncTotal() {
 			if (buyNowTotal) buyNowTotal.textContent = fmt(pricePerKg * currentQty());
 		}
 
-		function setQty(next: number) {
-			const clamped = Math.max(minQty, next);
-			qtyInput!.value = String(clamped);
-			syncTotal();
-		}
-
-		decBtn?.addEventListener('click', () => setQty(currentQty() - step));
-		incBtn?.addEventListener('click', () => setQty(currentQty() + step));
-		qtyInput.addEventListener('change', () => setQty(currentQty()));
+		qtySelect.addEventListener('change', syncTotal);
 
 		addBtn?.addEventListener('click', () => {
 			const qty = currentQty();
 			addItem(slug, qty);
 			if (note) {
 				note.hidden = false;
-				note.textContent = `${qty}kg added to cart.`;
+				note.textContent = `${qtySelect!.selectedOptions[0]?.textContent} added to cart.`;
 				window.setTimeout(() => {
 					note.hidden = true;
 				}, 2500);
@@ -333,12 +314,6 @@ const schema = [
 		font-weight: 800;
 	}
 
-	.product-card-moq {
-		font-size: 0.75rem;
-		font-weight: 600;
-		opacity: 0.65;
-	}
-
 	.product-card-qty {
 		margin-top: 1.1rem;
 	}
@@ -353,47 +328,14 @@ const schema = [
 		opacity: 0.72;
 	}
 
-	.qty-stepper {
-		display: inline-flex;
-		align-items: center;
+	.qty-select {
+		padding: 0.5rem 0.7rem;
 		background: rgba(255, 255, 255, 0.55);
 		border: 1px solid rgba(23, 23, 23, 0.18);
 		border-radius: 0.75rem;
-		overflow: hidden;
-	}
-
-	.qty-btn {
-		width: 2.4rem;
-		height: 2.4rem;
-		display: grid;
-		place-items: center;
-		background: transparent;
-		border: none;
-		font-size: 1.1rem;
-		font-weight: 700;
-		color: inherit;
-		cursor: pointer;
-	}
-
-	.qty-btn:hover {
-		background: rgba(23, 23, 23, 0.08);
-	}
-
-	.qty-value {
-		width: 3.6rem;
-		text-align: center;
-		border: none;
-		background: transparent;
 		font-size: 0.95rem;
 		font-weight: 800;
 		color: inherit;
-		-moz-appearance: textfield;
-	}
-
-	.qty-value::-webkit-outer-spin-button,
-	.qty-value::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
 	}
 
 	.product-card-actions {

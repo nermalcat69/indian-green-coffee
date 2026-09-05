@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { getOrderStatus, type GraycupOrdersEnv } from '../../lib/db';
+import { getOrderStatus } from '../../lib/db';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url, locals }) => {
+export const GET: APIRoute = async ({ url }) => {
 	const orderId = url.searchParams.get('order_id');
 	if (!orderId) {
 		return new Response(JSON.stringify({ error: 'order_id is required' }), {
@@ -13,8 +13,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 	}
 
 	try {
-		const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
-		const status = await getOrderStatus(env, orderId);
+		const status = await getOrderStatus(orderId);
 
 		if (!status) {
 			return new Response(JSON.stringify({ error: 'Order not found' }), {

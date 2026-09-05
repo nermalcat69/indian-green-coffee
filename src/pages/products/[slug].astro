@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
-import { products, getProductBySlug } from '../../data/products';
+import { products, getProductBySlug, WEIGHT_OPTIONS } from '../../data/products';
 import { getOriginBySlug } from '../../data/origins';
 import { siteConfig } from '../../config/site';
 
@@ -17,7 +17,7 @@ const origin = getOriginBySlug(product.originSlug)!;
 
 const pageUrl = `${siteConfig.siteUrl}/products/${product.slug}`;
 const title = `${product.name} | Indian Green Coffee`;
-const description = `${product.summary} ${product.process}, ${product.varietal}. ₹${product.priceRange.min}-${product.priceRange.max}${product.priceRange.unit} FOB India. MOQ ${product.minimumOrder.quantity}${product.minimumOrder.unit}.`;
+const description = `${product.summary} ${product.process}, ${product.varietal}. ₹${product.priceRange.min}-${product.priceRange.max}${product.priceRange.unit} FOB India. Available in 250gm, 500gm, 1kg, 5kg, and 10kg.`;
 
 const specs: Array<[string, string]> = [
 	['Variety', product.variety],
@@ -26,7 +26,7 @@ const specs: Array<[string, string]> = [
 	['Varietal', product.varietal],
 	...(product.scaScore != null ? ([['SCA Score', String(product.scaScore)]] as Array<[string, string]>) : []),
 	['Price (FOB India)', `₹${product.priceRange.min}–${product.priceRange.max}${product.priceRange.unit}`],
-	['Minimum order', `${product.minimumOrder.quantity}${product.minimumOrder.unit}`],
+	['Pack sizes', WEIGHT_OPTIONS.map((o) => o.label).join(', ')],
 	['SKU', product.sku],
 ];
 
@@ -119,7 +119,6 @@ const schema = [
 						<p class="info-summary">{product.summary}</p>
 						<p class="info-price">
 							₹{product.priceRange.min}–{product.priceRange.max}{product.priceRange.unit}
-							<span class="info-moq">min {product.minimumOrder.quantity}{product.minimumOrder.unit}</span>
 						</p>
 					</div>
 
@@ -142,28 +141,23 @@ const schema = [
 						data-slug={product.slug}
 						data-name={product.name}
 						data-price={product.priceRange.min}
-						data-min-qty={product.minimumOrder.quantity}
 					>
 						<div class="qty-row">
-							<span class="qty-label">Quantity ({product.minimumOrder.unit})</span>
-							<div class="qty-stepper">
-								<button type="button" class="qty-btn" data-qty-dec aria-label={`Decrease quantity for ${product.name}`}>−</button>
-								<input
-									type="number"
-									class="qty-value"
-									data-qty-input
-									min={product.minimumOrder.quantity}
-									step={product.minimumOrder.quantity <= 10 ? 1 : 10}
-									value={product.minimumOrder.quantity}
-									aria-label={`Quantity in kg for ${product.name}`}
-								/>
-								<button type="button" class="qty-btn" data-qty-inc aria-label={`Increase quantity for ${product.name}`}>+</button>
-							</div>
+							<span class="qty-label">Pack size</span>
+							<select class="qty-select" data-qty-select aria-label={`Pack size for ${product.name}`}>
+								{
+									WEIGHT_OPTIONS.map((option) => (
+										<option value={option.kg} selected={option.kg === 1}>
+											{option.label}
+										</option>
+									))
+								}
+							</select>
 						</div>
 
 						<div class="buy-box-actions">
 							<button type="button" class="btn-buy-now" data-buy-now>
-								Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min * product.minimumOrder.quantity).toLocaleString('en-IN')}</span>
+								Buy now · <span data-buy-now-total>₹{Math.round(product.priceRange.min).toLocaleString('en-IN')}</span>
 							</button>
 							<button type="button" class="btn-add-cart" data-add-to-cart>
 								Add to cart
@@ -198,42 +192,29 @@ const schema = [
 	document.querySelectorAll<HTMLElement>('[data-product-card]').forEach((card) => {
 		const slug = card.dataset.slug;
 		const pricePerKg = Number(card.dataset.price ?? 0);
-		const minQty = Number(card.dataset.minQty ?? 1);
-		const qtyInput = card.querySelector<HTMLInputElement>('[data-qty-input]');
-		const decBtn = card.querySelector<HTMLButtonElement>('[data-qty-dec]');
-		const incBtn = card.querySelector<HTMLButtonElement>('[data-qty-inc]');
+		const qtySelect = card.querySelector<HTMLSelectElement>('[data-qty-select]');
 		const buyNowTotal = card.querySelector<HTMLElement>('[data-buy-now-total]');
 		const addBtn = card.querySelector<HTMLButtonElement>('[data-add-to-cart]');
 		const buyBtn = card.querySelector<HTMLButtonElement>('[data-buy-now]');
 		const note = card.querySelector<HTMLElement>('[data-add-to-cart-note]');
-		if (!slug || !qtyInput) return;
-
-		const step = Number(qtyInput.step) || 1;
+		if (!slug || !qtySelect) return;
 
 		function currentQty(): number {
-			return Math.max(Number(qtyInput!.value) || 0, minQty);
+			return Number(qtySelect!.value) || 1;
 		}
 
 		function syncTotal() {
 			if (buyNowTotal) buyNowTotal.textContent = fmt(pricePerKg * currentQty());
 		}
 
-		function setQty(next: number) {
-			const clamped = Math.max(minQty, next);
-			qtyInput!.value = String(clamped);
-			syncTotal();
-		}
-
-		decBtn?.addEventListener('click', () => setQty(currentQty() - step));
-		incBtn?.addEventListener('click', () => setQty(currentQty() + step));
-		qtyInput.addEventListener('change', () => setQty(currentQty()));
+		qtySelect.addEventListener('change', syncTotal);
 
 		addBtn?.addEventListener('click', () => {
 			const qty = currentQty();
 			addItem(slug, qty);
 			if (note) {
 				note.hidden = false;
-				note.textContent = `${qty}kg added to cart.`;
+				note.textContent = `${qtySelect!.selectedOptions[0]?.textContent} added to cart.`;
 				window.setTimeout(() => {
 					note.hidden = true;
 				}, 2500);
@@ -343,12 +324,6 @@ const schema = [
 		font-weight: 800;
 	}
 
-	.info-moq {
-		font-size: 0.8rem;
-		font-weight: 600;
-		opacity: 0.68;
-	}
-
 	.spec-table {
 		width: 100%;
 		border-collapse: collapse;
@@ -399,49 +374,14 @@ const schema = [
 		color: var(--muted-foreground);
 	}
 
-	.qty-stepper {
-		display: inline-flex;
-		align-items: center;
+	.qty-select {
+		padding: 0.6rem 0.85rem;
 		border: 1px solid var(--control-border);
 		border-radius: 0.75rem;
-		overflow: hidden;
-	}
-
-	.qty-btn {
-		width: 2.6rem;
-		height: 2.6rem;
-		display: grid;
-		place-items: center;
-		background: transparent;
-		border: none;
-		font-size: 1.2rem;
-		font-weight: 700;
-		color: inherit;
-		cursor: pointer;
-	}
-
-	.qty-btn:hover {
-		background: var(--muted);
-	}
-
-	.qty-value {
-		width: 4rem;
-		text-align: center;
-		border: none;
-		border-left: 1px solid var(--control-border);
-		border-right: 1px solid var(--control-border);
 		background: transparent;
 		font-size: 1rem;
 		font-weight: 800;
 		color: inherit;
-		padding: 0.6rem 0;
-		-moz-appearance: textfield;
-	}
-
-	.qty-value::-webkit-outer-spin-button,
-	.qty-value::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
 	}
 
 	.buy-box-actions {

@@ -44,7 +44,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 
 <script>
 	import { getCart, removeItem, updateQty } from '../lib/cart';
-	import { products } from '../data/products';
+	import { products, WEIGHT_OPTIONS, formatWeight } from '../data/products';
 
 	const layoutEl = document.querySelector<HTMLElement>('[data-cart-layout]')!;
 	const listEl = document.querySelector<HTMLElement>('[data-cart-list]')!;
@@ -88,19 +88,16 @@ import SiteHeader from '../components/SiteHeader.astro';
 					<div class="cart-item-info">
 						<p class="cart-item-name"><a href="/products/${product.slug}">${product.name}</a></p>
 						<p class="cart-item-meta">${product.process}</p>
-						<p class="cart-item-price">₹${product.priceRange.min}/kg · min ${product.minimumOrder.quantity}${product.minimumOrder.unit}</p>
+						<p class="cart-item-price">₹${product.priceRange.min}/kg</p>
 					</div>
 					<div class="cart-item-controls">
-						<label class="qty-label" for="qty-${product.slug}">Qty (kg)</label>
-						<input
-							id="qty-${product.slug}"
-							type="number"
-							min="${product.minimumOrder.quantity}"
-							step="1"
-							value="${item.qtyKg}"
-							data-qty-input
-							data-slug="${product.slug}"
-						/>
+						<label class="qty-label" for="qty-${product.slug}">Pack size</label>
+						<select id="qty-${product.slug}" data-qty-select data-slug="${product.slug}">
+							${WEIGHT_OPTIONS.map(
+								(option) =>
+									`<option value="${option.kg}" ${option.kg === item.qtyKg ? 'selected' : ''}>${option.label}</option>`
+							).join('')}
+						</select>
 						<p class="cart-item-total">${fmt(lineTotal)}</p>
 						<button type="button" data-remove data-slug="${product.slug}" aria-label="Remove ${product.name}">Remove</button>
 					</div>
@@ -109,7 +106,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 
 			summaryRows.push(`
 				<div class="summary-line">
-					<span>${product.name} × ${item.qtyKg}kg</span>
+					<span>${product.name} × ${formatWeight(item.qtyKg)}</span>
 					<span>${fmt(lineTotal)}</span>
 				</div>
 			`);
@@ -134,13 +131,10 @@ import SiteHeader from '../components/SiteHeader.astro';
 
 	listEl.addEventListener('change', (event) => {
 		const target = event.target;
-		if (!(target instanceof HTMLInputElement) || !target.dataset.qtyInput) return;
+		if (!(target instanceof HTMLSelectElement) || !target.dataset.qtySelect) return;
 		const slug = target.dataset.slug;
 		if (!slug) return;
-		const product = products.find((p) => p.slug === slug);
-		const qty = Math.max(Number(target.value) || 0, product?.minimumOrder.quantity ?? 1);
-		target.value = String(qty);
-		updateQty(slug, qty);
+		updateQty(slug, Number(target.value) || 1);
 		render();
 	});
 
@@ -252,8 +246,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 		align-self: flex-end;
 	}
 
-	.cart-item-controls input[type='number'] {
-		width: 5rem;
+	.cart-item-controls select {
 		padding: 0.5rem 0.6rem;
 		border: 1px solid var(--control-border);
 		border-radius: 0.6rem;

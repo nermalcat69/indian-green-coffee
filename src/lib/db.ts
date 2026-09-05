@@ -3,6 +3,11 @@
 // "GRAYCUP_ORDERS_DB" here — see wrangler.jsonc). No separate Postgres store;
 // this table is the source of truth for indian-green-coffee's orders.
 // Schema: migrations/0001_create_indian_green_coffee_orders.sql
+//
+// Astro.locals.runtime.env was removed in Astro v6 — bindings are read
+// straight from 'cloudflare:workers' instead of being threaded through
+// every route handler.
+import { env } from 'cloudflare:workers';
 
 export interface D1Like {
 	prepare(query: string): {
@@ -46,16 +51,16 @@ function nowUnixSeconds(): number {
 	return Math.floor(Date.now() / 1000);
 }
 
-function requireDb(env: GraycupOrdersEnv | undefined): D1Like {
-	const db = env?.GRAYCUP_ORDERS_DB;
+function requireDb(): D1Like {
+	const db = (env as GraycupOrdersEnv).GRAYCUP_ORDERS_DB;
 	if (!db) {
 		throw new Error('GRAYCUP_ORDERS_DB is not bound — check wrangler.jsonc d1_databases config');
 	}
 	return db;
 }
 
-export async function insertOrder(env: GraycupOrdersEnv | undefined, order: NewOrder): Promise<void> {
-	const db = requireDb(env);
+export async function insertOrder(order: NewOrder): Promise<void> {
+	const db = requireDb();
 	const now = nowUnixSeconds();
 	await db
 		.prepare(
@@ -87,12 +92,8 @@ export async function insertOrder(env: GraycupOrdersEnv | undefined, order: NewO
 		.run();
 }
 
-export async function attachCashfreeOrderId(
-	env: GraycupOrdersEnv | undefined,
-	orderId: string,
-	cfOrderId: string
-): Promise<void> {
-	const db = requireDb(env);
+export async function attachCashfreeOrderId(orderId: string, cfOrderId: string): Promise<void> {
+	const db = requireDb();
 	await db
 		.prepare(`UPDATE indian_green_coffee_orders SET cashfree_order_id = ?, updated_at = ? WHERE order_id = ?`)
 		.bind(cfOrderId, nowUnixSeconds(), orderId)
@@ -100,12 +101,11 @@ export async function attachCashfreeOrderId(
 }
 
 export async function updateOrderStatusByOrderId(
-	env: GraycupOrdersEnv | undefined,
 	orderId: string,
 	status: 'PAID' | 'FAILED',
 	cfPaymentId: string | null
 ): Promise<void> {
-	const db = requireDb(env);
+	const db = requireDb();
 	await db
 		.prepare(
 			`UPDATE indian_green_coffee_orders
@@ -117,12 +117,11 @@ export async function updateOrderStatusByOrderId(
 }
 
 export async function updateOrderStatusByCashfreeOrderId(
-	env: GraycupOrdersEnv | undefined,
 	cfOrderId: string,
 	status: 'PAID' | 'FAILED',
 	cfPaymentId: string | null
 ): Promise<void> {
-	const db = requireDb(env);
+	const db = requireDb();
 	await db
 		.prepare(
 			`UPDATE indian_green_coffee_orders
@@ -133,8 +132,8 @@ export async function updateOrderStatusByCashfreeOrderId(
 		.run();
 }
 
-export async function getOrderStatus(env: GraycupOrdersEnv | undefined, orderId: string): Promise<string | null> {
-	const db = requireDb(env);
+export async function getOrderStatus(orderId: string): Promise<string | null> {
+	const db = requireDb();
 	const row = await db
 		.prepare(`SELECT status FROM indian_green_coffee_orders WHERE order_id = ?`)
 		.bind(orderId)

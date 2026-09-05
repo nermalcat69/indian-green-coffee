@@ -1,4 +1,4 @@
-import { products } from '../data/products';
+import { products, WEIGHT_OPTIONS } from '../data/products';
 import { siteConfig } from '../config/site';
 
 export function GET() {
@@ -26,7 +26,7 @@ export function GET() {
 			imageAlt: product.imageAlt,
 			currency: 'INR',
 			priceRange: product.priceRange,
-			minimumOrder: product.minimumOrder,
+			packSizes: WEIGHT_OPTIONS.map((o) => o.label),
 		})),
 	};
 

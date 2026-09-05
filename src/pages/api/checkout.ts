@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
-import { insertOrder, attachCashfreeOrderId, type GraycupOrdersEnv } from '../../lib/db';
+import { insertOrder, attachCashfreeOrderId } from '../../lib/db';
 import { createCashfreeOrder } from '../../lib/cashfree';
-import { products } from '../../data/products';
+import { products, WEIGHT_OPTIONS } from '../../data/products';
 import { siteConfig } from '../../config/site';
 
 export const prerender = false;
@@ -29,7 +29,7 @@ function jsonError(message: string, status = 400) {
 	});
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
 	let body: CheckoutBody;
 	try {
 		body = await request.json();
@@ -80,13 +80,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			return jsonError(`Unknown product: ${raw?.slug}`);
 		}
 		const qtyKg = Number(raw.qtyKg);
-		if (!Number.isFinite(qtyKg) || qtyKg <= 0) {
+		if (!WEIGHT_OPTIONS.some((option) => option.kg === qtyKg)) {
 			return jsonError(`Invalid quantity for ${product.name}`);
-		}
-		if (qtyKg < product.minimumOrder.quantity) {
-			return jsonError(
-				`${product.name} requires a minimum order of ${product.minimumOrder.quantity}${product.minimumOrder.unit}`
-			);
 		}
 		const pricePerKg = product.priceRange.min;
 		const lineTotal = Math.round(pricePerKg * qtyKg);
@@ -96,11 +91,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
 	const totalAmount = subtotal;
 
-	const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
 	const orderId = crypto.randomUUID();
 
 	try {
-		await insertOrder(env, {
+		await insertOrder({
 			orderId,
 			customerName: name.trim(),
 			customerEmail: email.trim(),
@@ -132,7 +126,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			notifyUrl: `${siteConfig.siteUrl}/api/cashfree/webhook`,
 		});
 
-		await attachCashfreeOrderId(env, orderId, cfOrderId);
+		await attachCashfreeOrderId(orderId, cfOrderId);
 
 		return new Response(JSON.stringify({ orderId, paymentSessionId }), {
 			status: 200,

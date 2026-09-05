@@ -92,7 +92,7 @@ const description = 'Complete your wholesale green coffee order.';
 <script>
 	import { load } from '@cashfreepayments/cashfree-js';
 	import { getCart } from '../lib/cart';
-	import { products } from '../data/products';
+	import { products, formatWeight } from '../data/products';
 
 	const grid = document.querySelector<HTMLElement>('[data-checkout-grid]')!;
 	const emptyEl = document.querySelector<HTMLElement>('[data-checkout-empty]')!;
@@ -121,7 +121,7 @@ const description = 'Complete your wholesale green coffee order.';
 				total += lineTotal;
 				return `
 					<div class="summary-line">
-						<span>${product.name} × ${item.qtyKg}kg</span>
+						<span>${product.name} × ${formatWeight(item.qtyKg)}</span>
 						<span>${fmt(lineTotal)}</span>
 					</div>
 				`;

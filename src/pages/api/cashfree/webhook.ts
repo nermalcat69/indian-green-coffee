@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
-import { updateOrderStatusByCashfreeOrderId, type GraycupOrdersEnv } from '../../../lib/db';
+import { updateOrderStatusByCashfreeOrderId } from '../../../lib/db';
 import { verifyCashfreeWebhookSignature } from '../../../lib/cashfree';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
 	const rawBody = await request.text();
 	const signature = request.headers.get('x-webhook-signature');
 	const timestamp = request.headers.get('x-webhook-timestamp');
@@ -59,8 +59,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	}
 
 	try {
-		const env = (locals as { runtime?: { env?: GraycupOrdersEnv } }).runtime?.env;
-		await updateOrderStatusByCashfreeOrderId(env, cfOrderId, paymentStatus, cfPaymentId ?? null);
+		await updateOrderStatusByCashfreeOrderId(cfOrderId, paymentStatus, cfPaymentId ?? null);
 	} catch (err) {
 		console.error(err);
 		return new Response('Failed to update order', { status: 500 });

@@ -317,3 +317,16 @@ export function getProductBySlug(slug: string): Product | undefined {
 export function getProductsByOrigin(originSlug: string): Product[] {
 	return products.filter((p) => p.originSlug === originSlug);
 }
+
+// Retail pack sizes — every product is sold in these sizes, no minimum order.
+export const WEIGHT_OPTIONS = [
+	{ label: '250gm', kg: 0.25 },
+	{ label: '500gm', kg: 0.5 },
+	{ label: '1kg', kg: 1 },
+	{ label: '5kg', kg: 5 },
+	{ label: '10kg', kg: 10 },
+] as const;
+
+export function formatWeight(kg: number): string {
+	return WEIGHT_OPTIONS.find((o) => o.kg === kg)?.label ?? `${kg}kg`;
+}
